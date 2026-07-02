@@ -20,17 +20,7 @@ export const SettingsTab: React.FC = () => {
   const [resetting, setResetting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const isDarkTheme = () => {
-    return document.documentElement.getAttribute('data-theme') === 'dark';
-  };
 
-  const toggleTheme = () => {
-    playSound('click');
-    const isDark = isDarkTheme();
-    const nextTheme = isDark ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', nextTheme);
-    localStorage.setItem('zeroToModernAI_theme', nextTheme);
-  };
 
   const handleExportBackup = () => {
     playSound('click');
@@ -140,12 +130,7 @@ export const SettingsTab: React.FC = () => {
               {audioMuted ? 'Off 🔇' : 'On 🔊'}
             </button>
           </div>
-          <div className="flex justify-between items-center py-1 border-b border-[var(--border-color)]">
-            <span className="text-sm font-bold text-[var(--text-main)]">Dark / Light Mode Toggle</span>
-            <button className="btn-chunky btn-gray text-xs py-2 px-4 font-bold" onClick={toggleTheme}>
-              {isDarkTheme() ? 'On ☽' : 'Off ☼'}
-            </button>
-          </div>
+
         </div>
       </div>
 

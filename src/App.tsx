@@ -388,7 +388,7 @@ const AppContent: React.FC = () => {
           {SVG_MASCOT.happy(36, 36)}
           <h1 className="brand-title text-sm">ZERO TO AI</h1>
         </div>
-        <HUD />
+        <HUD onTabChange={setActiveTab} />
       </header>
 
       {/* Main Content Column */}
@@ -470,7 +470,7 @@ const AppContent: React.FC = () => {
 
       {/* Desktop Right Sidebar Widgets */}
       <aside className="right-sidebar">
-        <HUD />
+        <HUD onTabChange={setActiveTab} />
         
         {/* Right Quest Card */}
         <div className={activeTab === 'roadmap' ? '' : 'hidden'}>

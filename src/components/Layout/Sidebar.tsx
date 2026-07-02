@@ -20,18 +20,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const { progress } = useAuth();
   const { playSound, muted: audioMuted, toggleMute } = useAudio();
 
-  const isDarkTheme = () => {
-    return document.documentElement.getAttribute('data-theme') === 'dark';
-  };
 
-  const toggleTheme = () => {
-    playSound('click');
-    const isDark = isDarkTheme();
-    const nextTheme = isDark ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', nextTheme);
-    localStorage.setItem('zeroToModernAI_theme', nextTheme);
-    // Force rerender or state update if necessary (standard HTML attribute update takes care of base CSS rules)
-  };
 
   // Helper to calculate progress percentage for a phase
   const calculatePhaseProgress = (phaseIndex: number) => {
@@ -226,15 +215,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {audioMuted ? 'Off 🔇' : 'On 🔊'}
           </button>
         </div>
-        <div className="utility-row">
-          <span>Dark Theme</span>
-          <button
-            onClick={toggleTheme}
-            className="btn-chunky btn-gray btn-sm"
-          >
-            {isDarkTheme() ? 'On ☽' : 'Off ☼'}
-          </button>
-        </div>
+
       </div>
     </aside>
   );
