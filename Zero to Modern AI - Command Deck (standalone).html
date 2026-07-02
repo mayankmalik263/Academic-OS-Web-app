@@ -1,0 +1,4482 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zero to Modern AI — Gamified Command Deck</title>
+<style>
+/* ---------- DataCamp x Duolingo Design Tokens ---------- */
+:root {
+  --color-green: #05C46B;
+  --color-green-dark: #04A85B;
+  --color-blue: #1CB0F6;
+  --color-blue-dark: #189ED8;
+  --color-gold: #FFC800;
+  --color-gold-dark: #E6B400;
+  --color-orange: #FF9600;
+  --color-orange-dark: #E68200;
+  --color-red: #FF4B4B;
+  --color-red-dark: #EA2B2B;
+  --color-purple: #CE82FF;
+  --color-purple-dark: #AA60EB;
+  --color-gray: #E2E8F0;
+  --color-gray-dark: #CBD5E1;
+  
+  --font-main: "Nunito", "Segoe UI Rounded", "Arial Rounded MT Bold", system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+[data-theme="light"] {
+  --bg-page: #F8FAFC;
+  --bg-main: #FFFFFF;
+  --text-main: #0B132C;
+  --text-muted: #475569;
+  --text-faint: #94A3B8;
+  --border-color: #E2E8F0;
+  --card-bg: #FFFFFF;
+  --active-node-bg: #E0F2FE;
+  --shadow-color: rgba(15, 23, 42, 0.06);
+  --sidebar-hover-bg: #F1F5F9;
+  --input-bg: #F8FAFC;
+  --meta-bullet-bg: #F1F5F9;
+  --meta-bullet-text: #0B132B;
+}
+
+[data-theme="dark"] {
+  --bg-page: #0B1324;
+  --bg-main: #0F172A;
+  --text-main: #F1F5F9;
+  --text-muted: #94A3B8;
+  --text-faint: #475569;
+  --border-color: #1E293B;
+  --card-bg: #1E293B;
+  --active-node-bg: #0284C7;
+  --shadow-color: rgba(0, 0, 0, 0.35);
+  --sidebar-hover-bg: #1E293B;
+  --input-bg: #0B1324;
+  --meta-bullet-bg: #1E293B;
+  --meta-bullet-text: #F1F5F9;
+}
+
+/* ---------- Base Styles ---------- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+body {
+  background-color: var(--bg-page);
+  color: var(--text-main);
+  font-family: var(--font-main);
+  font-weight: 700;
+  display: flex;
+  min-height: 100vh;
+  transition: background-color 0.3s, color 0.3s;
+  overflow-x: hidden;
+}
+button, input, textarea {
+  font-family: inherit;
+  font-weight: inherit;
+  outline: none;
+}
+button {
+  cursor: pointer;
+}
+button:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 3px solid var(--color-blue);
+  outline-offset: 2px;
+}
+a {
+  color: var(--color-blue);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* ---------- App Layout ---------- */
+.app-container {
+  display: flex;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* Left Sidebar (Desktop) */
+.left-sidebar {
+  width: 280px;
+  border-right: 2px solid var(--border-color);
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  background-color: var(--bg-main);
+  z-index: 10;
+}
+.brand-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 8px 24px;
+  border-bottom: 2px solid var(--border-color);
+  margin-bottom: 20px;
+}
+.brand-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.brand-title {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--text-main);
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+.brand-subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  letter-spacing: 0.5px;
+}
+
+.left-sidebar-scroll {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-right: 4px;
+}
+.left-sidebar-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.left-sidebar-scroll::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.section-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  letter-spacing: 1.5px;
+  margin: 8px 8px 4px;
+}
+
+.nav-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 2px solid transparent;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-muted);
+  background: none;
+  transition: all 0.2s;
+  text-align: left;
+  width: 100%;
+}
+.nav-item:hover {
+  background-color: var(--sidebar-hover-bg);
+  color: var(--text-main);
+}
+.nav-item.active {
+  background-color: var(--sidebar-hover-bg);
+  border-color: var(--border-color);
+  color: var(--color-green);
+}
+.nav-item svg {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+
+/* DataCamp Course/Chapter Select in Sidebar */
+.course-chapters-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.chapter-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background-color: var(--bg-page);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  text-align: left;
+}
+.chapter-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px var(--shadow-color);
+  border-color: var(--text-faint);
+}
+.chapter-title-box {
+  flex: 1;
+  padding-right: 8px;
+}
+.chapter-title-num {
+  font-size: 10px;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+.chapter-title-name {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+.chapter-progress {
+  width: 32px;
+  height: 32px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.chapter-progress .circular-chart {
+  width: 32px;
+  height: 32px;
+}
+.chapter-progress .circle {
+  stroke: var(--color-green);
+}
+.chapter-pct {
+  position: absolute;
+  font-size: 8px;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+.chapter-item.parked {
+  opacity: 0.6;
+}
+.chapter-item.parked .chapter-progress .circle {
+  stroke: var(--color-purple);
+}
+
+.left-sidebar-footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 8px 0;
+  border-top: 2px solid var(--border-color);
+}
+.utility-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Central Content Column */
+.main-content {
+  flex: 1;
+  padding: 40px 32px 100px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+/* Right Sidebar (Desktop) */
+.right-sidebar {
+  width: 360px;
+  border-left: 2px solid var(--border-color);
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+  background-color: var(--bg-main);
+}
+.right-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+.right-sidebar::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 6px;
+}
+
+/* ---------- Top HUD & Navigation (Mobile) ---------- */
+.mobile-hud {
+  display: none;
+  position: sticky;
+  top: 0;
+  width: 100%;
+  background-color: var(--bg-main);
+  border-bottom: 2px solid var(--border-color);
+  padding: 12px 16px;
+  z-index: 30;
+  justify-content: space-between;
+  align-items: center;
+}
+.mobile-nav-bar {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 72px;
+  background-color: var(--bg-main);
+  border-top: 2px solid var(--border-color);
+  z-index: 30;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 12px;
+  box-shadow: 0 -4px 12px var(--shadow-color);
+}
+.mobile-nav-bar .nav-item {
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  font-size: 10px;
+  border: none;
+  border-radius: 12px;
+  text-transform: uppercase;
+}
+.mobile-nav-bar .nav-item svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ---------- Top HUD Widgets ---------- */
+.hud-widgets {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.hud-widget {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 14px;
+  border: 2px solid var(--border-color);
+  background-color: var(--bg-main);
+  cursor: pointer;
+  transition: transform 0.1s, background-color 0.2s;
+}
+.hud-widget:hover {
+  background-color: var(--sidebar-hover-bg);
+}
+.hud-widget:active {
+  transform: scale(0.95);
+}
+.hud-widget svg {
+  width: 18px;
+  height: 18px;
+}
+.hud-widget.streak {
+  color: var(--color-orange);
+  border-color: var(--color-orange);
+}
+.hud-widget.xp {
+  color: var(--color-gold);
+  border-color: var(--color-gold);
+}
+.hud-widget.freeze {
+  color: var(--color-blue);
+  border-color: var(--color-blue);
+}
+.hud-widget.level {
+  color: var(--color-purple);
+  border-color: var(--color-purple);
+}
+
+/* ---------- Chunky 3D Buttons ---------- */
+.btn-chunky {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px;
+  border-radius: 16px;
+  border: none;
+  font-size: 14px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  transition: transform 0.1s, box-shadow 0.1s;
+  text-align: center;
+  user-select: none;
+}
+.btn-chunky:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: 0 4px 0 var(--border-color) !important;
+}
+
+.btn-green {
+  background-color: var(--color-green);
+  color: #FFFFFF;
+  box-shadow: 0 4px 0 var(--color-green-dark);
+}
+.btn-green:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+.btn-green:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 transparent;
+}
+
+.btn-blue {
+  background-color: var(--color-blue);
+  color: #FFFFFF;
+  box-shadow: 0 4px 0 var(--color-blue-dark);
+}
+.btn-blue:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+.btn-blue:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 transparent;
+}
+
+.btn-gray {
+  background-color: var(--bg-page);
+  color: var(--text-main);
+  border: 2px solid var(--border-color);
+  box-shadow: 0 4px 0 var(--border-color);
+}
+.btn-gray:hover:not(:disabled) {
+  background-color: var(--border-color);
+}
+.btn-gray:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 transparent;
+}
+
+.btn-red {
+  background-color: var(--color-red);
+  color: #FFFFFF;
+  box-shadow: 0 4px 0 var(--color-red-dark);
+}
+.btn-red:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+.btn-red:active:not(:disabled) {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 transparent;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 11px;
+  border-radius: 10px;
+  box-shadow: 0 3px 0 currentColor;
+}
+.btn-sm:active {
+  transform: translateY(3px);
+}
+
+/* ---------- Unit / Phase headers ---------- */
+.unit-container {
+  margin-bottom: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+.unit-banner {
+  width: 100%;
+  padding: 24px 28px;
+  border-radius: 24px;
+  color: #FFFFFF;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 8px 16px var(--shadow-color);
+  margin-bottom: 24px;
+  position: relative;
+}
+.unit-banner-left {
+  flex: 1;
+}
+.unit-banner-left h2 {
+  font-size: 24px;
+  font-weight: 900;
+  margin-bottom: 6px;
+  letter-spacing: -0.5px;
+}
+.unit-banner-left p {
+  font-size: 13px;
+  opacity: 0.95;
+  font-family: var(--font-mono);
+}
+.unit-banner-right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.unit-progress-circle {
+  position: relative;
+  width: 64px;
+  height: 64px;
+}
+.circular-chart {
+  width: 64px;
+  height: 64px;
+}
+.circle-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.25);
+  stroke-width: 3.5;
+}
+.circle {
+  fill: none;
+  stroke: #FFFFFF;
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.3s ease;
+}
+.unit-pct {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.python-slice-card {
+  width: 100%;
+  background-color: var(--card-bg);
+  border: 2px solid var(--border-color);
+  border-radius: 18px;
+  padding: 14px 20px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+.python-slice-card strong {
+  color: var(--color-blue);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.commitment-card {
+  width: 100%;
+  background-color: var(--card-bg);
+  border: 2px solid var(--border-color);
+  border-radius: 18px;
+  padding: 16px 20px;
+  font-size: 14px;
+  margin-bottom: 28px;
+  position: relative;
+  overflow: hidden;
+}
+.commitment-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 6px;
+  background-color: var(--color-orange);
+}
+.commitment-card strong {
+  text-transform: uppercase;
+  color: var(--color-orange);
+  font-size: 11px;
+  letter-spacing: 1px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* ---------- Winding learning path ---------- */
+.path-nodes-container {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0;
+}
+.path-connector-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  background-color: var(--border-color);
+  z-index: 1;
+}
+
+.node-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 0;
+  z-index: 2;
+  transition: transform 0.2s;
+}
+.node-label {
+  margin-top: 8px;
+  background-color: var(--bg-main);
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  padding: 4px 12px;
+  font-size: 12.5px;
+  white-space: nowrap;
+  box-shadow: 0 4px 6px var(--shadow-color);
+}
+
+/* Alternating path winding positions */
+.offset-center { transform: translateX(0); }
+.offset-right-1 { transform: translateX(45px); }
+.offset-right-2 { transform: translateX(90px); }
+.offset-left-1 { transform: translateX(-45px); }
+.offset-left-2 { transform: translateX(-90px); }
+
+/* Winding PCA, k-means, Naive Bayes Side-Quests (visually branched) */
+.sidequest-node {
+  position: absolute;
+  top: 0;
+  z-index: 2;
+}
+.sidequest-node.branch-right {
+  left: calc(50% + 120px);
+}
+.sidequest-node.branch-left {
+  right: calc(50% + 120px);
+}
+.sidequest-node-line {
+  position: absolute;
+  top: 36px;
+  height: 4px;
+  border-top: 4px dotted var(--color-purple);
+  z-index: 1;
+}
+.sidequest-node.branch-right + .sidequest-node-line {
+  left: 50%;
+  width: 120px;
+}
+.sidequest-node.branch-left + .sidequest-node-line {
+  right: 50%;
+  width: 120px;
+}
+
+@media (max-width: 580px) {
+  .offset-right-1 { transform: translateX(30px); }
+  .offset-right-2 { transform: translateX(60px); }
+  .offset-left-1 { transform: translateX(-30px); }
+  .offset-left-2 { transform: translateX(-60px); }
+  .sidequest-node.branch-right { left: calc(50% + 80px); }
+  .sidequest-node.branch-left { right: calc(50% + 80px); }
+  .sidequest-node.branch-right + .sidequest-node-line { width: 80px; }
+  .sidequest-node.branch-left + .sidequest-node-line { width: 80px; }
+}
+
+/* Node Button styles */
+.node-btn {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: transform 0.1s;
+}
+.node-btn svg {
+  width: 30px;
+  height: 30px;
+}
+.node-btn::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 4px solid transparent;
+  pointer-events: none;
+}
+
+/* Colors based on node state */
+.node-btn.completed {
+  background-color: var(--color-green);
+  box-shadow: 0 6px 0 var(--color-green-dark);
+}
+.node-btn.completed:active {
+  transform: translateY(6px);
+  box-shadow: 0 0 0 transparent;
+}
+.node-btn.completed svg {
+  fill: #FFFFFF;
+}
+
+.node-btn.current {
+  background-color: var(--color-blue);
+  box-shadow: 0 6px 0 var(--color-blue-dark);
+}
+.node-btn.current::after {
+  border-color: var(--color-blue);
+  animation: pulse-ring 2s infinite;
+}
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); opacity: 1; }
+  100% { transform: scale(1.25); opacity: 0; }
+}
+.node-btn.current:active {
+  transform: translateY(6px);
+  box-shadow: 0 0 0 transparent;
+}
+.node-btn.current svg {
+  fill: #FFFFFF;
+}
+
+.node-btn.locked {
+  background-color: var(--color-gray);
+  box-shadow: 0 6px 0 var(--color-gray-dark);
+}
+.node-btn.locked svg {
+  fill: var(--text-faint);
+}
+
+.node-btn.project-boss {
+  border-radius: 20px;
+  width: 80px;
+  height: 80px;
+}
+.node-btn.project-boss.completed {
+  background-color: var(--color-purple);
+  box-shadow: 0 6px 0 var(--color-purple-dark);
+}
+.node-btn.project-boss.current {
+  background-color: var(--color-blue);
+  box-shadow: 0 6px 0 var(--color-blue-dark);
+}
+
+.node-btn.gate-boss {
+  border-radius: 20px;
+  width: 80px;
+  height: 80px;
+}
+.node-btn.gate-boss.completed {
+  background-color: var(--color-green);
+  box-shadow: 0 6px 0 var(--color-green-dark);
+}
+.node-btn.gate-boss.current {
+  background-color: var(--color-red);
+  box-shadow: 0 6px 0 var(--color-red-dark);
+}
+
+/* Optional Sidequest Styling (visually distinct) */
+.node-btn.sidequest {
+  background-color: var(--color-purple);
+  box-shadow: 0 6px 0 var(--color-purple-dark);
+  border: 3px dashed #FFF;
+}
+.node-btn.sidequest.completed {
+  background-color: var(--color-green);
+  box-shadow: 0 6px 0 var(--color-green-dark);
+  border: none;
+}
+.node-btn.sidequest.locked {
+  background-color: var(--color-gray);
+  box-shadow: 0 6px 0 var(--color-gray-dark);
+  border: 3px dashed var(--text-faint);
+}
+
+/* ---------- Current Quest Highlight Card ---------- */
+.quest-card {
+  background-color: var(--card-bg);
+  border: 2px solid var(--border-color);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 8px 16px var(--shadow-color);
+}
+.quest-card-header {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--color-orange);
+  letter-spacing: 1.5px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.quest-card-title {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--text-main);
+  margin-bottom: 8px;
+}
+.quest-card-body {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+.quest-card-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ---------- Cards and General Panel Blocks ---------- */
+.card {
+  background-color: var(--card-bg);
+  border: 2px solid var(--border-color);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 8px 16px var(--shadow-color);
+  margin-bottom: 24px;
+}
+.card-title {
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--text-main);
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+}
+
+/* ---------- Per-phase Resources Panel ---------- */
+.resources-panel {
+  width: 100%;
+  background-color: var(--card-bg);
+  border: 2px solid var(--border-color);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 32px;
+}
+.resources-title {
+  font-size: 16px;
+  font-weight: 800;
+  margin-bottom: 12px;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.resources-tier {
+  margin-bottom: 16px;
+}
+.resources-tier-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--color-green);
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+  font-weight: 800;
+}
+.resources-tier-title.parked {
+  color: var(--color-purple);
+}
+.resources-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  list-style: none;
+}
+.resources-list li {
+  font-size: 13.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.resources-list a {
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.resources-details-box {
+  border-top: 1px solid var(--border-color);
+  padding-top: 12px;
+  margin-top: 12px;
+}
+.resources-details-summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--color-purple);
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  user-select: none;
+}
+.resources-details-summary::-webkit-details-marker {
+  display: none;
+}
+.portfolio-project-box {
+  background-color: var(--bg-page);
+  border: 1px dashed var(--color-orange);
+  border-radius: 12px;
+  padding: 12px;
+  margin-top: 12px;
+  font-size: 13px;
+}
+.portfolio-project-box strong {
+  color: var(--color-orange);
+  font-size: 11px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* ---------- Meta-Learning System Tab CSS ---------- */
+.meta-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.meta-item {
+  display: flex;
+  gap: 16px;
+  background-color: var(--bg-main);
+  border: 2px solid var(--border-color);
+  border-radius: 16px;
+  padding: 16px;
+  align-items: flex-start;
+}
+.meta-badge {
+  background-color: var(--meta-bullet-bg);
+  color: var(--meta-bullet-text);
+  font-size: 14px;
+  font-weight: 900;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 2px solid var(--border-color);
+}
+.meta-content {
+  flex: 1;
+}
+.meta-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+.meta-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* ---------- Modals and Dialog Overlays ---------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.7);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  padding: 16px;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+.modal-card {
+  background-color: var(--bg-main);
+  border: 3px solid var(--border-color);
+  width: 100%;
+  max-width: 520px;
+  border-radius: 28px;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.25);
+  transform: translateY(30px);
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.modal-overlay.open .modal-card {
+  transform: translateY(0);
+}
+.modal-header {
+  padding: 24px 24px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.modal-header-left {
+  flex: 1;
+}
+.modal-tag {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--color-blue);
+  letter-spacing: 1.5px;
+  margin-bottom: 4px;
+  display: block;
+}
+.modal-title {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--text-main);
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--text-faint);
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+}
+.modal-close-btn:hover {
+  color: var(--text-main);
+}
+.modal-content-body {
+  padding: 12px 24px 24px;
+  overflow-y: auto;
+  max-height: 70vh;
+}
+
+/* Details and Focus modes Boxes */
+.focus-tip-box {
+  background-color: var(--bg-page);
+  border: 2px solid var(--border-color);
+  border-radius: 16px;
+  padding: 14px;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.focus-tip-box.learn {
+  border-left: 5px solid var(--color-blue);
+}
+.focus-tip-box.skip {
+  border-left: 5px solid var(--color-red);
+}
+
+/* Project Checklist modal */
+.project-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.project-step-section {
+  background-color: var(--bg-page);
+  border: 2px solid var(--border-color);
+  border-radius: 16px;
+  padding: 14px;
+}
+.project-step-section-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.project-step-section-title .lock-note {
+  font-size: 10px;
+  color: var(--color-red);
+  text-transform: uppercase;
+}
+.project-step-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.project-step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+.project-step-item.checked {
+  color: var(--text-faint);
+  text-decoration: line-through;
+}
+.project-step-item input {
+  margin-top: 3px;
+  cursor: pointer;
+}
+
+/* ---------- Focus Mode Overlay (Full screen) ---------- */
+.focus-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: var(--bg-page);
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  padding: 40px 24px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  overflow-y: auto;
+}
+.focus-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+.focus-container {
+  max-width: 640px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.focus-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ---------- Calendar Widget CSS ---------- */
+.calendar-widget {
+  background-color: var(--bg-main);
+  border: 2px solid var(--border-color);
+  border-radius: 20px;
+  padding: 16px;
+}
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.calendar-month-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+.calendar-nav-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px 8px;
+}
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  text-align: center;
+  font-size: 11px;
+}
+.calendar-day-name {
+  color: var(--text-faint);
+  font-weight: 800;
+  padding-bottom: 4px;
+}
+.calendar-cell {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-weight: 800;
+  color: var(--text-muted);
+  background-color: var(--bg-page);
+}
+.calendar-cell.active-day {
+  background-color: var(--color-orange);
+  color: #FFFFFF;
+}
+.calendar-cell.frozen-day {
+  background-color: var(--color-blue);
+  color: #FFFFFF;
+}
+.calendar-cell.today {
+  border: 2px solid var(--text-main);
+}
+.calendar-stats {
+  border-top: 1px solid var(--border-color);
+  margin-top: 12px;
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+}
+.calendar-stat-item {
+  display: flex;
+  justify-content: space-between;
+}
+
+/* ---------- Trophy Grid ---------- */
+.trophy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+}
+.trophy-card {
+  background-color: var(--bg-page);
+  border: 2px solid var(--border-color);
+  border-radius: 16px;
+  padding: 16px 12px;
+  text-align: center;
+  opacity: 0.4;
+  filter: grayscale(1);
+  transition: transform 0.2s, opacity 0.3s;
+}
+.trophy-card.unlocked {
+  opacity: 1;
+  filter: none;
+  background-color: var(--bg-main);
+  border-color: var(--color-gold);
+  box-shadow: 0 4px 10px rgba(255, 200, 0, 0.15);
+}
+.trophy-icon {
+  font-size: 36px;
+  margin-bottom: 8px;
+}
+.trophy-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+.trophy-desc {
+  font-size: 10px;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+/* ---------- Pomodoro Widget ---------- */
+.pomo-widget {
+  background-color: var(--card-bg);
+  border: 2px solid var(--border-color);
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  box-shadow: 0 8px 16px var(--shadow-color);
+}
+.pomo-timer-circle {
+  position: relative;
+  width: 140px;
+  height: 140px;
+}
+.pomo-svg {
+  width: 140px;
+  height: 140px;
+  transform: rotate(-90deg);
+}
+.pomo-bg-ring {
+  fill: none;
+  stroke: var(--border-color);
+  stroke-width: 6;
+}
+.pomo-progress-ring {
+  fill: none;
+  stroke: var(--color-orange);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 283;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1s linear, stroke 0.3s;
+}
+.pomo-timer-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+.pomo-timer-time {
+  display: block;
+  font-size: 26px;
+  font-weight: 900;
+  color: var(--text-main);
+  line-height: 1;
+}
+.pomo-timer-label {
+  font-size: 8px;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  margin-top: 4px;
+}
+.pomo-widget-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ---------- Brain Dump Widget ---------- */
+.dump-widget {
+  background-color: var(--card-bg);
+  border: 2px solid var(--border-color);
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 8px 16px var(--shadow-color);
+}
+.dump-textarea {
+  width: 100%;
+  height: 180px;
+  border-radius: 14px;
+  border: 2px solid var(--border-color);
+  background-color: var(--input-bg);
+  color: var(--text-main);
+  padding: 12px;
+  font-size: 13.5px;
+  resize: none;
+  margin-top: 12px;
+  font-family: var(--font-main);
+  font-weight: 700;
+}
+.dump-textarea:focus {
+  border-color: var(--color-blue);
+}
+.dump-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+}
+.dump-status {
+  font-size: 11px;
+  color: var(--color-green);
+  font-family: var(--font-mono);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.dump-status.visible {
+  opacity: 1;
+}
+
+/* ---------- Level Up Celeb Screen ---------- */
+.celebrate-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.95);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  backdrop-filter: blur(8px);
+}
+.celebrate-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+.celebrate-card {
+  text-align: center;
+  max-width: 440px;
+  width: 100%;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: scale(0.8);
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.celebrate-overlay.open .celebrate-card {
+  transform: scale(1);
+}
+.celebrate-title {
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--color-gold);
+  margin-top: 16px;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+.celebrate-subtitle {
+  font-size: 15px;
+  color: #FFFFFF;
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+.celebrate-badge-container {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+.celebrate-badge {
+  background-color: #1E293B;
+  border: 3px solid var(--color-gold);
+  border-radius: 20px;
+  padding: 16px 20px;
+  text-align: center;
+}
+.celebrate-badge-val {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--color-gold);
+  display: block;
+}
+.celebrate-badge-lbl {
+  font-size: 9px;
+  text-transform: uppercase;
+  color: #94A3B8;
+  letter-spacing: 1px;
+}
+
+/* ---------- Global Utilities ---------- */
+.hidden {
+  display: none !important;
+}
+#confetti-canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999;
+}
+
+/* ---------- Media Queries for Tablet/Mobile ---------- */
+@media (max-width: 992px) {
+  .left-sidebar {
+    display: none;
+  }
+  .right-sidebar {
+    display: none;
+  }
+  .mobile-hud {
+    display: flex;
+  }
+  .mobile-nav-bar {
+    display: flex;
+  }
+  .main-content {
+    padding: 24px 16px 110px;
+    max-width: 100%;
+  }
+}
+</style>
+<style>
+/* ---------- Local Profile System CSS ---------- */
+.profile-screen {
+  position: fixed;
+  inset: 0;
+  background-color: var(--bg-page);
+  z-index: 5000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  overflow-y: auto;
+}
+.profile-screen-container {
+  width: 100%;
+  max-width: 600px;
+  background-color: var(--bg-main);
+  border: 3px solid var(--border-color);
+  border-radius: 28px;
+  padding: 36px;
+  box-shadow: 0 16px 32px var(--shadow-color);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  text-align: center;
+}
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 20px;
+  margin-top: 12px;
+  justify-content: center;
+}
+.profile-card {
+  background-color: var(--bg-page);
+  border: 2px solid var(--border-color);
+  border-radius: 20px;
+  padding: 20px 12px;
+  cursor: pointer;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  user-select: none;
+}
+.profile-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--color-green);
+  box-shadow: 0 8px 16px var(--shadow-color);
+}
+.profile-avatar-large {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 900;
+  color: #FFFFFF;
+  text-transform: uppercase;
+  border: 3px solid var(--border-color);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+.profile-card-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-main);
+  word-break: break-all;
+}
+.profile-delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: var(--color-red);
+  color: #FFFFFF;
+  border: none;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 10;
+}
+.profile-card:hover .profile-delete-btn {
+  opacity: 0.8;
+}
+.profile-card:hover .profile-delete-btn:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: left;
+  border-top: 2px dashed var(--border-color);
+  padding-top: 24px;
+  margin-top: 12px;
+}
+.profile-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.profile-input-group label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.profile-input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 2px solid var(--border-color);
+  background-color: var(--input-bg);
+  color: var(--text-main);
+  font-size: 14px;
+  font-weight: 700;
+}
+.profile-input:focus {
+  border-color: var(--color-blue);
+}
+.profile-notice {
+  font-size: 11.5px;
+  color: var(--text-faint);
+  line-height: 1.4;
+  margin-top: 8px;
+}
+.hud-profile-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hud-profile-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 900;
+  color: #FFFFFF;
+  text-transform: uppercase;
+  border: 2px solid var(--border-color);
+}
+.hud-profile-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+</style>
+</head>
+<body>
+
+<!-- Local Profile Selection Screen -->
+<div id="profileScreen" class="profile-screen">
+  <div class="profile-screen-container">
+    <div>
+      <h1 class="brand-title" style="font-size:32px; color:var(--color-green);">Zero to Modern AI</h1>
+      <div class="brand-subtitle" style="font-size:14px; margin-top:4px;">Command Deck — Profile Manager</div>
+    </div>
+    
+    <div>
+      <h2 style="font-size:20px; font-weight:900; margin-bottom:12px;">Who is learning today?</h2>
+      <div class="profile-grid" id="profileGrid">
+        <!-- Rendered dynamically in JS -->
+      </div>
+    </div>
+    
+    <form class="profile-form" id="createProfileForm" onsubmit="handleCreateProfile(event)">
+      <h3 style="font-size:16px; font-weight:900; color:var(--color-blue); margin-bottom:8px;">Create New Profile</h3>
+      
+      <div class="profile-input-group">
+        <label for="newProfileName">Profile Name</label>
+        <input class="profile-input" type="text" id="newProfileName" placeholder="Enter name (e.g. Mayank)" required maxLength="20">
+      </div>
+      
+      <div class="profile-input-group">
+        <label for="newProfilePassword">Optional Password (for lock screen)</label>
+        <input class="profile-input" type="password" id="newProfilePassword" placeholder="Leave empty for no password">
+      </div>
+      
+      <button type="submit" class="btn-chunky btn-green" style="margin-top:8px; width:100%;">Create Profile</button>
+    </form>
+    
+    <div class="profile-notice">
+      🔒 <strong>Local profile:</strong> Saved on this device and browser only, not a secure account. Clear browser storage to reset.
+    </div>
+  </div>
+</div>
+
+<!-- Password Entry Modal Overlay -->
+<div class="modal-overlay" id="passwordModal">
+  <div class="modal-card" style="max-width:380px;">
+    <div class="modal-header">
+      <div class="modal-header-left">
+        <span class="modal-tag">Security Check</span>
+        <h2 class="modal-title">Enter Password</h2>
+      </div>
+      <button class="modal-close-btn" onclick="closePasswordModal()">&times;</button>
+    </div>
+    <div class="modal-content-body">
+      <form onsubmit="handleVerifyPassword(event)" style="display:flex; flex-direction:column; gap:16px;">
+        <input type="hidden" id="passModalProfileId">
+        <div class="profile-input-group">
+          <input class="profile-input" type="password" id="passModalInput" placeholder="Password" required>
+        </div>
+        <div id="passModalError" style="color:var(--color-red); font-size:12px; font-weight:800; display:none;">Incorrect password. Try again!</div>
+        <button type="submit" class="btn-chunky btn-blue" style="width:100%;">Unlock Profile</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="app-container">
+  <!-- Left Sidebar (Desktop only) -->
+  <aside class="left-sidebar">
+    <div class="brand-container">
+      <div class="brand-logo" id="sidebarMascotContainer"></div>
+      <div>
+        <h1 class="brand-title">ZERO TO AI</h1>
+        <div class="brand-subtitle">COMMAND DECK</div>
+      </div>
+    </div>
+    
+    <div class="left-sidebar-scroll">
+      <div class="section-title">Track Courses</div>
+      <div class="course-chapters-list" id="sidebarCourseList">
+        <!-- Dynamic Course Chapters will be injected by renderSidebarCourses() in JS -->
+      </div>
+
+      <div class="section-title">Navigation</div>
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="roadmap" onclick="setTab('roadmap')">
+          <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+          Map Path
+        </button>
+        <button class="nav-item" data-tab="meta" onclick="setTab('meta')">
+          <svg viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3z M5.47 18.6L12 22l6.53-3.4L12 15.2L5.47 18.6z"/></svg>
+          Meta-Learning
+        </button>
+        <button class="nav-item" data-tab="stats" onclick="setTab('stats')">
+          <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          Stats & Trophi
+        </button>
+        <button class="nav-item" data-tab="tools" onclick="setTab('tools')">
+          <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/><path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+          Workspace Tools
+        </button>
+        <button class="nav-item" data-tab="settings" onclick="setTab('settings')">
+          <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+          Settings
+        </button>
+      </nav>
+    </div>
+    
+    <div class="left-sidebar-footer">
+      <div class="utility-row">
+        <span>Sound SFX</span>
+        <button class="btn-chunky btn-gray btn-sm" id="soundBtn" onclick="toggleMute()">Off 🔇</button>
+      </div>
+      <div class="utility-row">
+        <span>Dark Theme</span>
+        <button class="btn-chunky btn-gray btn-sm" id="themeBtn" onclick="toggleTheme()">On ☽</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Mobile HUD Header -->
+  <header class="mobile-hud">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <div id="mobileMascotContainer"></div>
+      <h1 class="brand-title" style="font-size:16px;">ZERO TO AI</h1>
+    </div>
+    
+    <div class="hud-widgets" id="mobileHUDWidgets">
+      <!-- Generated in JS -->
+    </div>
+  </header>
+
+  <!-- Main Scrollable Content -->
+  <main class="main-content">
+    
+    <!-- Learn Path Tab -->
+    <div class="tab-content" id="tab-content-roadmap">
+      <div class="commitment-card">
+        <strong>Commitment Zone</strong>
+        Phase 0 & Phase 1 are active. Phases 2 & 3 are parked on purpose — not a backlog! Focus on code-first principles, not the polish.
+      </div>
+      
+      <!-- Current Quest Highlight Card -->
+      <div style="margin-bottom: 30px;">
+        <div class="quest-card" id="currentQuestCard">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+      
+      <!-- Vertical Learning Path -->
+      <div id="learningPath">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+
+    <!-- Meta-Learning Tab -->
+    <div class="tab-content hidden" id="tab-content-meta">
+      <div class="card" style="margin-bottom: 24px;">
+        <h2 class="card-title">Meta-Learning System</h2>
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px;">Open before each study session to align your study habits with cognitive science principles.</p>
+        
+        <div class="meta-panel">
+          <div class="meta-item">
+            <div class="meta-badge">M1</div>
+            <div class="meta-content">
+              <h3 class="meta-title">Active Recall Check</h3>
+              <p class="meta-desc">After completing each topic, close all tabs and notes. Explain the concept aloud or write it down from memory. Any gap in memory is a signal to immediately restudy.</p>
+            </div>
+          </div>
+          
+          <div class="meta-item">
+            <div class="meta-badge">M2</div>
+            <div class="meta-content">
+              <h3 class="meta-title">Feynman Technique</h3>
+              <p class="meta-desc">Explain the topic in plain, simple words as if teaching a beginner. If you must resort to jargon or fail to find a simple analogy, you haven't fully learned it.</p>
+            </div>
+          </div>
+          
+          <div class="meta-item">
+            <div class="meta-badge">M3</div>
+            <div class="meta-content">
+              <h3 class="meta-title">Anki / Flashcards</h3>
+              <p class="meta-desc">Use flashcards ONLY for things you repeatedly forget (e.g. math formulas, exact terms, specific dimensions). Do not front-load general theory.</p>
+            </div>
+          </div>
+          
+          <div class="meta-item">
+            <div class="meta-badge">M4</div>
+            <div class="meta-content">
+              <h3 class="meta-title">Interleaving</h3>
+              <p class="meta-desc">For every study session, mix old concepts with new ones (e.g., 1 old topic review + 1 new topic block) to prevent passive recognition and strengthen long-term recall.</p>
+            </div>
+          </div>
+          
+          <div class="meta-item">
+            <div class="meta-badge">M5</div>
+            <div class="meta-content">
+              <h3 class="meta-title">Build & Explain</h3>
+              <p class="meta-desc">After building any ML project or step, force yourself to explain why each part works, what each line of code accomplishes, and what would happen if you changed parameters.</p>
+            </div>
+          </div>
+
+          <div class="meta-item">
+            <div class="meta-badge">M6</div>
+            <div class="meta-content">
+              <h3 class="meta-title">Spaced Repetition</h3>
+              <p class="meta-desc">Revisit each finished topic at exactly ~1 week, ~1 month, and ~3 months intervals. Set up reminders or track dates to keep the memory pathways active.</p>
+            </div>
+          </div>
+
+          <div class="meta-item">
+            <div class="meta-badge">M7</div>
+            <div class="meta-content">
+              <h3 class="meta-title">3-Layer Attack</h3>
+              <p class="meta-desc">For any hard concept: obtain <strong>Intuition</strong> (3Blue1Brown/StatQuest), read the <strong>Primary Teaching</strong> source, then do the <strong>Implementation</strong> (write pure NumPy code/derivations). Do these in pairs, not sequentially.</p>
+            </div>
+          </div>
+
+          <div class="meta-item">
+            <div class="meta-badge">M8</div>
+            <div class="meta-content">
+              <h3 class="meta-title">Build-then-Explain Loop</h3>
+              <p class="meta-desc">Immediately follow Abhishek's "paper-to-code loop": derive on paper first, code from scratch, and then write/speak a clear explanation of how the math translates to lines of code.</p>
+            </div>
+          </div>
+
+          <div class="meta-item">
+            <div class="meta-badge">M9</div>
+            <div class="meta-content">
+              <h3 class="meta-title">Teach to Retain</h3>
+              <p class="meta-desc">If a concept continues to slip out of memory, write an article, make a short video, or teach the concept aloud to someone else. The act of packaging the idea for another brain seals it in yours.</p>
+            </div>
+          </div>
+
+          <div class="meta-item" style="border-color: var(--color-orange);">
+            <div class="meta-badge" style="background-color: var(--color-orange); color: white;">★</div>
+            <div class="meta-content">
+              <h3 class="meta-title">Keystone Rule: Paper First</h3>
+              <p class="meta-desc"><strong>Derive before building.</strong> Do not touch code until you have mapped the equations, dimensions, and derivatives on paper. Photograph your derivations to keep a visual proof-log.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats & Achievements Tab -->
+    <div class="tab-content hidden" id="tab-content-stats">
+      <div class="card" style="margin-bottom: 24px;">
+        <h2 class="card-title">Stats Dashboard</h2>
+        <div class="hud-widgets" id="statsHUDWidgets" style="margin-bottom:20px;">
+          <!-- Generated in JS -->
+        </div>
+        
+        <!-- Streak Calendar Inline -->
+        <div class="calendar-widget" id="statsCalendarWidget">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+      
+      <div class="card">
+        <h2 class="card-title">Trophy Case</h2>
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:12px;">Earn gold badges by leveling up and finishing milestones.</p>
+        <div class="trophy-grid" id="statsTrophyCase">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Tools & Pomodoro Tab -->
+    <div class="tab-content hidden" id="tab-content-tools">
+      <div style="display:flex; flex-direction:column; gap:24px;">
+        <!-- Pomodoro Widget -->
+        <div class="pomo-widget">
+          <div class="pomo-timer-circle">
+            <svg class="pomo-svg" viewBox="0 0 100 100">
+              <circle class="pomo-bg-ring" cx="50" cy="50" r="45"></circle>
+              <circle class="pomo-progress-ring" id="pomoProgressCircle" cx="50" cy="50" r="45"></circle>
+            </svg>
+            <div class="pomo-timer-text">
+              <span class="pomo-timer-time" id="pomoTimerText">25:00</span>
+              <span class="pomo-timer-label" id="pomoTimerLabel">FOCUS BLOCK</span>
+            </div>
+          </div>
+          <div class="pomo-widget-controls">
+            <button class="btn-chunky btn-green" id="pomoStartBtn" onclick="togglePomo()">Start Focus</button>
+            <button class="btn-chunky btn-gray" id="pomoResetBtn" onclick="resetPomo()">Reset</button>
+          </div>
+        </div>
+
+        <!-- Brain Dump Widget -->
+        <div class="dump-widget">
+          <h2 class="card-title">Brain Dump Notepad</h2>
+          <p style="font-size:12px; color:var(--text-muted); margin-top:-6px;">Type random thoughts, tasks, or distractions here to park them during focus blocks.</p>
+          <textarea class="dump-textarea" id="dumpTextarea" placeholder="Write anything... saved automatically."></textarea>
+          <div class="dump-footer">
+            <span class="dump-status" id="dumpSaveStatus">Saved ✓</span>
+            <button class="btn-chunky btn-gray btn-sm" onclick="clearDump()">Clear Notepad</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings & Data Tab -->
+    <div class="tab-content hidden" id="tab-content-settings">
+      <div class="card" style="margin-bottom:24px; display:flex; flex-direction:column; gap:16px;">
+        <h2 class="card-title">Gamified Settings & Audio</h2>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span>Current Profile</span>
+            <button class="btn-chunky btn-gray" onclick="logoutProfile()">Switch Profile 👤</button>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span>Sound Effects ( mutable )</span>
+            <button class="btn-chunky btn-gray" id="soundBtnSettings" onclick="toggleMute()">Off 🔇</button>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span>Dark / Light Mode Toggle</span>
+            <button class="btn-chunky btn-gray" id="themeBtnSettings" onclick="toggleTheme()">On ☽</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card" style="display:flex; flex-direction:column; gap:16px;">
+        <h2 class="card-title">Backup & Restore</h2>
+        <p style="font-size:13px; color:var(--text-muted);">Backup your zeroToModernAI_v2 local storage file. You can import it back at any time.</p>
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+          <button class="btn-chunky btn-blue" onclick="exportBackup()">Export Backup</button>
+          <button class="btn-chunky btn-gray" onclick="triggerImport()">Import Backup</button>
+          <button class="btn-chunky btn-green" onclick="exportCurrentProfile()">Export Profile</button>
+          <button class="btn-chunky btn-gray" onclick="triggerProfileImport()">Import Profile</button>
+          <button class="btn-chunky btn-red" onclick="resetAllData()">Reset All Data</button>
+          <input type="file" id="importFileInput" accept="application/json" style="display:none" onchange="importBackup(event)">
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Desktop Right Sidebar (Roadmap Stats, Current Quest, Calendar) -->
+  <aside class="right-sidebar">
+    <div class="hud-widgets" id="desktopHUDWidgets">
+      <!-- Generated in JS -->
+    </div>
+    
+    <!-- Current Quest Card -->
+    <div class="quest-card" id="desktopCurrentQuestCard">
+      <!-- Populated by JS -->
+    </div>
+    
+    <!-- Streak Calendar widget -->
+    <div class="calendar-widget" id="desktopCalendarWidget">
+      <!-- Generated in JS -->
+    </div>
+  </aside>
+</div>
+
+<!-- Mobile Tab Bar (Bottom) -->
+<nav class="mobile-nav-bar">
+  <button class="nav-item active" data-tab="roadmap" onclick="setTab('roadmap')">
+    <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+    Path
+  </button>
+  <button class="nav-item" data-tab="meta" onclick="setTab('meta')">
+    <svg viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3z M5.47 18.6L12 22l6.53-3.4L12 15.2L5.47 18.6z"/></svg>
+    Meta
+  </button>
+  <button class="nav-item" data-tab="stats" onclick="setTab('stats')">
+    <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+    Stats
+  </button>
+  <button class="nav-item" data-tab="tools" onclick="setTab('tools')">
+    <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/><path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+    Tools
+  </button>
+  <button class="nav-item" data-tab="settings" onclick="setTab('settings')">
+    <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+    Backup
+  </button>
+</nav>
+
+<!-- Lesson Detail Modal Overlay -->
+<div class="modal-overlay" id="lessonModal">
+  <div class="modal-card">
+    <button class="modal-close-btn" onclick="closeModal('lessonModal')">&times;</button>
+    <div class="modal-header-tag" id="modalTag">TOPIC 0.1</div>
+    <h2 class="modal-title" id="modalTitle">Vectors</h2>
+    <div id="modalBody">
+      <!-- Populated in JS -->
+    </div>
+  </div>
+</div>
+
+<!-- Focus Mode Overlay -->
+<div class="focus-overlay" id="focusOverlay">
+  <div class="focus-container">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <span class="modal-header-tag" id="focusTag">FOCUS MODE</span>
+      <button class="btn-chunky btn-gray btn-sm" onclick="closeFocusMode()">Quit Focus</button>
+    </div>
+    <h2 class="modal-title" style="font-size:26px; margin:0;" id="focusTitle">Vectors</h2>
+    
+    <div class="focus-tip-box learn">
+      <strong style="display:block; text-transform:uppercase; font-size:11px; margin-bottom:4px;">Instructions (LEARN)</strong>
+      <span id="focusLearnText">Vector = list of numbers...</span>
+    </div>
+    
+    <div class="focus-tip-box skip">
+      <strong style="display:block; text-transform:uppercase; font-size:11px; margin-bottom:4px;">Skipped / Out-of-scope (SKIP)</strong>
+      <span id="focusSkipText">Vector spaces, basis proofs...</span>
+    </div>
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; margin:8px 0;">
+      <span style="font-size:13px; color:var(--text-muted); font-family:var(--font-mono);" id="focusSearchLabel">Search Query</span>
+      <div style="display:flex; gap:8px;">
+        <button class="btn-chunky btn-gray btn-sm" id="focusYTBtn">YouTube</button>
+        <button class="btn-chunky btn-gray btn-sm" id="focusGoogleBtn">Google</button>
+      </div>
+    </div>
+    
+    <div style="display:flex; gap:12px; margin-top:12px;">
+      <button class="btn-chunky btn-green" style="flex:2; padding:16px;" id="focusCompleteBtn">I've Learned This! 🔥</button>
+      <button class="btn-chunky btn-gray" style="flex:1;" onclick="closeFocusMode()">Not Yet</button>
+    </div>
+  </div>
+</div>
+
+<!-- Streak Calendar Fullscreen Popup Modal -->
+<div class="modal-overlay" id="calendarModal">
+  <div class="modal-card">
+    <button class="modal-close-btn" onclick="closeModal('calendarModal')">&times;</button>
+    <div class="modal-header-tag">CALENDAR</div>
+    <h2 class="modal-title">Streak Log</h2>
+    <div class="calendar-widget" id="modalCalendarContainer">
+      <!-- Generated in JS -->
+    </div>
+  </div>
+</div>
+
+<!-- Level Up celebration overlay -->
+<div class="celebrate-overlay" id="celebrateOverlay">
+  <div class="celebrate-card">
+    <div id="celebrateMascotContainer" style="margin-bottom:12px;"></div>
+    <h2 class="celebrate-title" id="celebrateTitle">Level Up!</h2>
+    <p class="celebrate-subtitle" id="celebrateSubtitle">You've reached Level X!</p>
+    
+    <div class="celebrate-rewards">
+      <div class="reward-badge">
+        <span class="reward-val" style="color:var(--color-gold);" id="celebrateXPReward">+100</span>
+        <span class="reward-lbl">XP Earned</span>
+      </div>
+      <div class="reward-badge" id="celebrateFreezeBadge">
+        <span class="reward-val" style="color:var(--color-blue);">+1 🛡️</span>
+        <span class="reward-lbl">Streak Freeze</span>
+      </div>
+    </div>
+    
+    <button class="btn-chunky btn-green" style="padding:14px 28px; width:200px;" onclick="closeCelebration()">Awesome! 🚀</button>
+  </div>
+</div>
+
+<!-- Confetti Canvas -->
+<canvas id="confetti-canvas"></canvas>
+
+<script>
+"use strict";
+
+/* ================= Roadmap Data (Unchanged) ================= */
+const roadmap = [
+{ id:"p0", name:"Phase 0 - Math Base", theory:"70% theory / 30% code",
+  pyslice:"Python slice: variables, functions, loops, lists, numpy arrays, matplotlib. SKIP: OOP, decorators, async, file handling (later).",
+  groups:[
+   {title:"Linear Algebra", items:[
+    {id:"0.1",ttl:"Vectors",learn:"Vector = list of numbers = a point/arrow. Add two vectors (elementwise). Scalar multiply. Magnitude = sqrt of sum of squares. Do one by hand.",skip:"Vector spaces, basis proofs, linear independence theory.",search:"vectors intuition linear algebra 3blue1brown"},
+    {id:"0.2",ttl:"Dot product",learn:"Multiply elementwise, then sum. a.b = sum of ai*bi. Measures similarity/alignment; =0 means perpendicular. By hand, then np.dot. Returns in attention later.",skip:"Cosine similarity derivation, inner product spaces.",search:"dot product intuition meaning explained"},
+    {id:"0.3",ttl:"Matrices",learn:"Matrix = grid of numbers, shape = rows x cols. Matrix-vector multiply by hand: each output = dot product of a matrix row with the vector.",skip:"Determinants, inverse, eigenvalues. Skip fully.",search:"matrix vector multiplication explained"},
+    {id:"0.4",ttl:"Matrix-matrix multiply",learn:"(m x n)(n x p) = (m x p). Inner dims must match. Each cell = dot of a row with a column. One 2x2 by hand, verify with @.",skip:"Associativity proofs, block matrices.",search:"matrix multiplication how it works step by step"},
+    {id:"0.5",ttl:"Shapes + transpose",learn:".T flips rows/cols. Why shapes must align to multiply. This is ~80% of your future debugging.",skip:"Rank, null space.",search:"numpy array shapes transpose broadcasting explained"}
+   ]},
+   {title:"Calculus", items:[
+    {id:"0.6",ttl:"Derivative",learn:"Slope = rate of change. Rules: power rule (x^n to n*x^(n-1)), constant, sum. Compute simple ones by hand.",skip:"Limits formalism, product/quotient proofs, trig derivatives.",search:"derivative intuition slope explained visually"},
+    {id:"0.7",ttl:"Chain rule",keystone:true,learn:"CRITICAL, this IS backprop. f(g(x))' = f'(g(x))*g'(x). Drill 5 examples. Internalize: multiply local slopes along the chain.",skip:"Limits formalism, product/quotient proofs, trig derivatives.",search:"chain rule explained simply calculus"},
+    {id:"0.8",ttl:"Partial derivative",learn:"Derivative w.r.t. one variable, hold the others constant. That's it.",skip:"Total differentials, Jacobians (name only).",search:"partial derivatives explained"},
+    {id:"0.9",ttl:"Chain rule (multi)",learn:"Chain rule applied to multiple inputs. (e.g. backpropagation through multiple paths).",skip:"Jacobians, Hessians, second-order methods.",search:"partial derivatives multi variable chain rule"}
+   ]},
+   {title:"Probability & Stats", items:[
+    {id:"0.10",ttl:"Basics",learn:"Probability 0-1. Distribution = how probability spreads over outcomes. Independent events multiply.",skip:"Combinatorics depth, measure theory.",search:"probability basics explained beginners"},
+    {id:"0.11",ttl:"Stats",learn:"Mean, variance/std (spread), the Gaussian/normal bell shape (mean + std).",skip:"Hypothesis testing, p-values, confidence intervals.",search:"mean variance standard deviation normal distribution statquest"},
+    {id:"0.12",ttl:"Bayes rule",learn:"Conditional P(A|B). Bayes rule P(A|B)=P(B|A)P(A)/P(B). Work one example (medical test) fully.",skip:"Full Bayesian inference, priors/posteriors theory.",search:"bayes theorem explained example"}
+   ]},
+   {title:"Optimization", items:[
+    {id:"0.13",ttl:"Gradient descent",learn:"Start random, compute gradient, step opposite, repeat, reach a minimum. Core of all training.",skip:"Convexity proofs, momentum/Adam math (later).",search:"gradient descent explained visually"},
+    {id:"0.14",ttl:"Learning rate",learn:"Step size. Too big = overshoot/diverge; too small = slow. Start 0.01-0.1.",skip:"LR schedules, warmup (Phase 2-3).",search:"learning rate gradient descent explained"}
+   ]}
+  ],
+  projects:[
+   {id:"0.P",ttl:"Math-by-code notebook",learn:"Prove every Phase-0 concept in numpy. Not an app, a proof-log (~10 cells).",search:"numpy basics tutorial for machine learning",
+    paper:["a=[1,2,3], b=[4,5,6]: a.b by hand, show each multiply + sum.","2x2 A,B: A.B by hand, all 4 cells, write the grid.","f(x)=x^2: power-rule derivative (2x); numerical (f(x+h)-f(x))/h at x=3, h=0.001; predict both ~6.","Gradient descent on x^2: x=5, lr=0.1, 3 steps x=x-lr*(2x) by hand."],
+    build:["np.dot(a,b) equals hand answer.","A @ B equals your grid.","numerical derivative ~6; formula 2*3=6.","grad-descent ~10 lines, print x each step, print x each step, plot x vs step to 0; first 3 match paper."],
+    done:["Every code output equals your hand calc. Mismatch = hunt down paper vs understanding. That hunt IS the learning."]}
+  ],
+  gate:{title:"GATE to Phase 1 (minimum viable, don't chase mastery)",criteria:[
+   {id:"g0a",text:"Multiply two matrices by hand"},{id:"g0b",text:"State gradient in one sentence"},{id:"g0c",text:"Grad-descent code reaches a minimum"}]},
+  resources:{
+    basic:[
+      {name:"3Blue1Brown - Essence of Linear Algebra",url:"https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab"},
+      {name:"StatQuest - Statistics Fundamentals",url:"https://www.youtube.com/playlist?list=PLtBcD7a4ZgDdrnJ7_Wv0Bw7sZfG6C_U2a"},
+      {name:"Corey Schafer - Python OOP series (Python bits)",url:"https://www.youtube.com/playlist?list=PL-osiE80TeTsqhIuOqKhRlXSIB35bY26y"}
+    ],
+    intermediate:[
+      {name:"MIT 18.06 - Gilbert Strang",url:"https://www.youtube.com/playlist?list=PL49CF3715CB72B641"},
+      {name:"Probabilistic ML (Ch. 2-4) - Kevin Murphy",url:"https://probml.github.io/pml-book/book1.html"},
+      {name:"Python Data Science Handbook - VanderPlas",url:"https://jakevdp.github.io/PythonDataScienceHandbook/"}
+    ],
+    advanced:[
+      {name:"Mathematics for ML - Deisenroth, Faisal, Ong",url:"https://mml-book.github.io/"},
+      {name:"3Blue1Brown - Essence of Calculus",url:"https://www.youtube.com/playlist?list=PLZHQObOWTQDMsr9K-rj53DwVRMYO3t5Yr"},
+      {name:"Deep Learning Book Ch. 2-4 - Goodfellow",url:"https://www.deeplearningbook.org/"}
+    ],
+    optionalProject:"NumPy matrix library with ~15 linear-algebra ops + unit tests."
+  }
+},
+{ id:"p1", name:"Phase 1 - Classic ML From Scratch", theory:"30% theory / 70% build",
+  pyslice:"Python slice add: basic classes, CSV load, train/test split by hand. SKIP: pandas mastery (basic load only), sklearn (banned this phase).",
+  groups:[
+   {title:"Concepts", items:[
+    {id:"1.1",ttl:"What ML is",learn:"Learn a function from data by adjusting weights to reduce error. Supervised = input to label.",skip:"Unsupervised/RL theory (name only), taxonomy essays.",search:"what is machine learning explained simply"},
+    {id:"1.2",ttl:"Features, weights, bias",learn:"Prediction = weighted sum of features + bias. yhat = w.x + b.",skip:"Feature engineering deep-dives.",search:"weights and bias explained machine learning"},
+    {id:"1.3",ttl:"Loss (regression)",learn:"MSE = mean of (yhat - y)^2. 'How wrong' as one number.",skip:"MAE/Huber/other losses (MSE enough now).",search:"mean squared error explained"},
+    {id:"1.4",ttl:"Gradient of loss",learn:"Derivative of MSE w.r.t. weights tells how to nudge each weight. Derive once for the linear case.",skip:"Matrix-calculus general form.",search:"derivative of mse loss function derivation"},
+    {id:"1.5",ttl:"Training loop",learn:"predict, loss, gradient, update (w=w-lr*grad), repeat N epochs. Memorize this skeleton.",skip:"Batching/minibatch theory (full-batch fine now).",search:"machine learning training loop from scratch python"},
+    {id:"1.6",ttl:"Sigmoid + log loss",learn:"Sigmoid squashes to 0-1 (probability). sigma(z)=1/(1+e^-z). Log/cross-entropy loss for binary.",skip:"Softmax derivation (Phase 2), multi-class for now.",search:"sigmoid function logistic regression cross entropy explained"},
+    {id:"1.7",ttl:"Forward vs backward pass",learn:"Forward = compute prediction. Backward = compute gradients via the chain rule.",skip:"Computational-graph autodiff theory.",search:"forward pass backward pass neural network"},
+    {id:"1.8",ttl:"Backprop",keystone:true,learn:"KEYSTONE. Chain rule through layers. 2-layer net: gradient at output to hidden to weights. Do the math once on paper.",skip:"General backprop for arbitrary graphs (PyTorch later).",search:"backpropagation explained from scratch step by step"},
+    {id:"1.sq_nb",ttl:"Naive Bayes [Optional]",optional:true,learn:"Bayes rule applied to features, 'naive' = assume features independent. Do one tiny text-classification example by hand (spam / not-spam on 3 words). Use it as the cheap baseline: if your LLM classifier can't beat Naive Bayes, something is wrong.",skip:"Don't study the full generative-model theory. Baseline use only.",search:"naive bayes classifier intuition step by step"}
+   ]}
+  ],
+  projects:[
+   {id:"1.P1",ttl:"Linear regression, pure numpy",learn:"Fit a line by writing loss + gradient + update yourself. No sklearn. Split data and compute MSE/RMSE/R2 on the test set JIT.",search:"linear regression from scratch numpy",
+    paper:[
+      "Model yhat=w.x+b.",
+      "MSE=(1/n)sum(yhat-y)^2.",
+      "Derive dL/dw=(2/n)sum(yhat-y)*x, dL/db=(2/n)sum(yhat-y), show chain steps.",
+      "Update w=w-lr*dL/dw.",
+      "3 points, w=0,b=0: one full step by hand, every number.",
+      "Split data: write steps to hold out ~20% as a test set before training. Train on the rest."
+    ],
+    build:[
+      "Small CSV (size to price) or synthetic y=2x+noise.",
+      "Code predict, MSE, gradients, update loop.",
+      "Print loss/100 epochs, must decrease.",
+      "Plot points + fitted line.",
+      "Evaluate: compute MSE, RMSE, and R-squared on the test set."
+    ],
+    done:[
+      "Loss drops, line fits, epoch-1 grads match hand step, final w,b ~ truth.",
+      "You understand: training error looks good even when the model is bad, test error is the truth."
+    ]},
+   {id:"1.P2",ttl:"Logistic regression, pure numpy",learn:"Binary classification from scratch. Add nonlinearity + a new loss. Compute precision, recall, F1, and confusion matrix JIT.",search:"logistic regression from scratch numpy",
+    paper:[
+      "Sigmoid sigma(z)=1/(1+e^-z). sigma(0)=0.5, sigma(2)~0.88, sigma(-2)~0.12 by hand. Sketch S-curve.",
+      "Model yhat=sigma(w.x+b)=P(class 1).",
+      "Log loss L=-(1/n)sum[y*log(yhat)+(1-y)*log(1-yhat)].",
+      "Clean gradient dL/dw=(1/n)sum(yhat-y)*x. Why elegant.",
+      "One point by hand: z, yhat, loss.",
+      "Build a confusion matrix skeleton by hand once (TP, FP, TN, FN) and define Accuracy, Precision, Recall, F1."
+    ],
+    build:[
+      "2 separable blobs or binary CSV.",
+      "Code sigmoid, forward, log loss, gradients, update.",
+      "Train, loss decreasing.",
+      "yhat>0.5 to class 1, accuracy, plot decision boundary.",
+      "Evaluate: compute confusion matrix, accuracy, precision, recall, and F1-score from your code."
+    ],
+    done:[
+      "High accuracy on separable data, loss drops, hand yhat matches code.",
+      "You understand the imbalanced data trap: when class is 99% imbalanced, accuracy is a lie; know when to prefer recall vs precision."
+    ]},
+   {id:"1.P3",ttl:"2-layer neural net, numpy only",keystone:true,learn:"KEYSTONE, make-or-break. Forward + backprop BY HAND in code. Heaviest paper of the roadmap.",search:"2 layer neural network from scratch numpy backpropagation",
+    paper:["Draw net: 2 in to 3 hidden to 1 out. Label shapes W1(2x3), W2(3x1), biases.","FORWARD: z1=XW1+b1, a1=ReLU(z1), z2=a1W2+b2, yhat=sigma(z2).","BACKWARD layer by layer: dL/dyhat, dyhat/dz2, dz2/dW2 and da1, da1/dz1 (ReLU'), dz1/dW1. Chain to dL/dW2, dL/dW1, db's.","Tiny numbers, 1 sample: ONE full forward+backward by hand, every intermediate value."],
+    build:["XOR-like non-linear dataset (1 layer can't solve, proves hidden layer matters).","Forward as paper. Backward as paper chain. Update weights.","Train: loss drops, solves the non-linear task.","Print first-sample intermediates, compare to hand-pass."],
+    done:["Solves task a linear model failed.","Loss decreases.","First forward+backward matches paper.","Re-derive backprop on a blank page next day. If not, redo paper. Do NOT proceed without this."]},
+   {id:"1.P4",ttl:"End-to-end pipeline",learn:"Built after 1.P3. It exists to pull in evaluation, pandas, and plotting at the moment of use, instead of teaching them upfront.",search:"machine learning end to end pipeline pandas scikit-learn",
+    paper:[
+      "Write the pipeline steps (load, clean, split, train, evaluate, interpret) and the single metric you will trust, and why.",
+      "Define k-fold cross-validation concept: why a single split can fool you, how k-fold averages that out.",
+      "Define Bias-Variance tradeoff as a one-paragraph intuition (underfit = high bias, overfit = high variance)."
+    ],
+    build:[
+      "One notebook. Load a real CSV (learn just-enough pandas here).",
+      "Train a model (from scratch or sklearn, your call now that you built the scratch versions).",
+      "Evaluate with ROC-AUC + a confusion matrix (learn these here).",
+      "Plot the ROC curve with matplotlib.",
+      "Implement k-fold cross-validation to evaluate model robustness."
+    ],
+    done:[
+      "You can explain each step and defend the metric choice, no notes.",
+      "You can explain why cross-validation prevents single-split bias.",
+      "You can define the Bias-Variance tradeoff in plain words."
+    ]}
+  ],
+  gate:{title:"GATE to Phase 2",criteria:[
+   {id:"g1a",text:"1.P3 trains, loss drops, solves non-linear task"},{id:"g1b",text:"Explain backprop with no notes"},{id:"g1c",text:"Explain why each line of your net exists"},{id:"g1d",text:"Re-derive backprop on a blank page next day"}]},
+  resources:{
+    basic:[
+      {name:"StatQuest - Josh Starmer (ML Playlist)",url:"https://www.youtube.com/playlist?list=PLtBcD7a4ZgDfdnL8L9L7oPysMv64D42bA"},
+      {name:"CampusX - ML Series in Hinglish",url:"https://www.youtube.com/playlist?list=PLKnIAqWlhFTV2Q1G52G8k75g9-p6wX-bM"},
+      {name:"Scikit-Learn User Guide (Scratch to library)",url:"https://scikit-learn.org/stable/user_guide.html"}
+    ],
+    intermediate:[
+      {name:"ISLR - James, Witten, Hastie (Ch. 4-9)",url:"https://www.statlearning.com/"},
+      {name:"ESL - Hastie, Tibshirani (Ch. 3-5)",url:"https://hastie.su.domains/ElemStatLearn/"},
+      {name:"Hands-On ML - Aurelien Geron (Un-park first!)",url:"https://github.com/ageron/handson-ml3"}
+    ],
+    advanced:[
+      {name:"ESL Ch. 10 Boosting",url:"https://hastie.su.domains/ElemStatLearn/"},
+      {name:"Understanding ML - Shalev-Shwartz & Ben-David",url:"https://www.cs.huji.ac.il/~shais/UnderstandingMachineLearning/"}
+    ],
+    optionalProject:"Classic ML: Titanic survival predictor comparing a few algorithms with a short analysis report."
+  }
+},
+{ id:"p2", name:"Phase 2 - Deep Learning (PyTorch)", theory:"15% theory / 85% build",
+  pyslice:"Python slice add: PyTorch tensors, .to(device), nn.Module, DataLoader. SKIP: custom CUDA, distributed, mixed precision.",
+  groups:[
+   {title:"Concepts (JIT)", items:[
+    {id:"2.1",ttl:"Tensors",learn:"Numpy array + autograd + GPU. Create, reshape, index, .to(device).",skip:"Every tensor op (learn ones you use).",search:"pytorch tensors tutorial beginner"},
+    {id:"2.2",ttl:"Autograd",learn:"requires_grad, .backward(), .grad. PyTorch does your Phase-1 backprop for you. Connect it to what you built.",skip:"Custom autograd functions.",search:"pytorch autograd explained"},
+    {id:"2.3",ttl:"nn.Module + training",learn:"Model class (init layers, forward). Optimizer (Adam). Loop: zero_grad, forward, loss, backward, step.",skip:"Hooks, Lightning, custom optimizers.",search:"pytorch nn.Module training loop tutorial"},
+    {id:"2.4",ttl:"Activations",learn:"ReLU (max(0,x)); why nonlinearity lets nets learn complex functions. Sigmoid/softmax for outputs.",skip:"GELU/SiLU nuance (name only).",search:"relu activation function why nonlinearity"},
+    {id:"2.5",ttl:"CNN",learn:"Convolution = filter slides over image detecting patterns. Conv, pooling, flatten to linear. Enough to build one.",skip:"Architecture zoo (ResNet/VGG internals), receptive-field math.",search:"convolutional neural network explained visually"},
+    {id:"2.6",ttl:"Attention",keystone:true,learn:"Bridge to Phase 3. Q,K,V. score=Q.K^T/sqrt(d), softmax, weighted sum of V. Dot product (0.2) returns.",skip:"Multi-head full math (single-head first), positional encoding (Phase 3).",search:"self attention query key value explained"}
+   ]}
+  ],
+  projects:[
+   {id:"2.P1",ttl:"Rebuild 1.P3 in PyTorch",learn:"See what autograd does FOR you.",search:"pytorch simple neural network tutorial",
+    paper:["List what you hand-wrote in 1.P3 that PyTorch hides (backward, gradient formulas).","New loop skeleton: zero_grad, forward, loss, backward, step. No gradient math now."],
+    build:["Same dataset as 1.P3.","nn.Linear + ReLU, BCELoss, Adam.","Training loop; .backward() replaces hand gradients.","Same/better result than numpy."],
+    done:["Matches 1.P3, and you can point to the line where PyTorch does what you did by hand."]},
+   {id:"2.P2",ttl:"CNN on MNIST/CIFAR-10",learn:"Build a conv net that classifies images.",search:"pytorch cnn mnist tutorial",
+    paper:["Dataflow: 28x28x1, conv, pool, conv, pool, flatten, linear, 10.","One 3x3 filter on a patch: one conv output cell by hand.","Why pooling: shrink + keep strongest signal.","Shape after each layer."],
+    build:["MNIST via torchvision (start MNIST not CIFAR).","1-2 conv + pool + flatten + linear, CrossEntropyLoss.","Train few epochs, track train+test accuracy.","Plot predictions; inspect a misclassified one."],
+    done:["MNIST ~98%+, hand conv cell matches layer, shapes flow clean."]},
+   {id:"2.P3",ttl:"Attention block from scratch",keystone:true,learn:"Single-head scaled dot-product attention. Heart of modern AI.",search:"scaled dot product attention from scratch pytorch",
+    paper:["Q=XWq, K=XWk, V=XWv, shapes.","scores=Q.K^T/sqrt(d), softmax, output=softmax.V.","2 tokens, d=2, numbers: Q,K,V, scores, /sqrt(2), softmax, weighted sum. Every number.","Which token attended to which, why? Link to 0.2."],
+    build:["Q/K/V as linear layers. scores, scale, softmax, weighted sum.","Small fake embedding sequence. Print attention matrix.","Rows sum to 1; 2-token hand calc matches code."],
+    done:["Weights sum to 1, hand matches, explain 'each token attends by Q.K similarity' with no notes."]}
+  ],
+  gate:{title:"GATE to Phase 3",criteria:[
+   {id:"g2a",text:"CNN trains + classifies"},{id:"g2b",text:"Attention block runs"},{id:"g2c",text:"Explain why each layer exists"}]},
+  resources:{
+    basic:[
+      {name:"Andrej Karpathy - makemore series",url:"https://www.youtube.com/playlist?list=PLjxrf2q8roU23XGwz3yGTliNSfQr1FstG"},
+      {name:"3Blue1Brown - Neural Networks series",url:"https://www.youtube.com/playlist?list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi"},
+      {name:"fast.ai - Practical Deep Learning Pt. 1",url:"https://course.fast.ai/"}
+    ],
+    intermediate:[
+      {name:"Karpathy - Zero to Hero (full playlist)",url:"https://www.youtube.com/playlist?list=PLjxrf2q8roU29A6HsR07F1ziT6yF857JH"},
+      {name:"NYU Deep Learning - Yann LeCun (2021)",url:"https://cds.nyu.edu/deep-learning/"},
+      {name:"PyTorch Docs - Autograd & nn.Module deep dive",url:"https://pytorch.org/docs/stable/index.html"}
+    ],
+    advanced:[
+      {name:"Deep Learning Book - Goodfellow (Ch. 6-9)",url:"https://www.deeplearningbook.org/"},
+      {name:"Lilian Weng's blog (lilianweng.github.io)",url:"https://lilianweng.github.io/"},
+      {name:"Micrograd - Karpathy (~130-line source)",url:"https://github.com/karpathy/micrograd"}
+    ],
+    cv:{
+      basic:[
+        {name:"Stanford CS231n - Fei-Fei Li (lecture notes)",url:"http://cs231n.stanford.edu/"},
+        {name:"d2l.ai - Ch. 6 CNNs",url:"https://d2l.ai/chapter_convolutional-neural-networks/index.html"},
+        {name:"fast.ai Part 1 Lessons 1-4",url:"https://course.fast.ai/"}
+      ],
+      parked:[
+        {name:"ResNet, YOLO, ViT, DDPM papers (Parked / off-path)"}
+      ]
+    },
+    optionalProject:"Deep Learning: hand-written digit classifier in pure NumPy (>97% on MNIST)."
+  }
+},
+{ id:"p3", name:"Phase 3 - Modern AI (your zone)", theory:"10% theory / 90% build",
+  pyslice:"Python slice add: requests/API, async basics, env vars/keys, vector DB client, FastAPI. WARNING: this layer changes monthly. Learn stable parts deep (attention, embeddings, retrieval); treat tools as replaceable.",
+  groups:[
+   {title:"Concepts (JIT)", items:[
+    {id:"3.1",ttl:"Tokenization",learn:"Text to tokens to ids to embeddings. Subword (BPE) at concept level. Tokens are not words.",skip:"Training your own tokenizer, BPE implementation.",search:"llm tokenization bpe explained"},
+    {id:"3.2",ttl:"Transformer",learn:"Stack of (attention + feedforward + residual + layernorm). Add positional info. Enough to assemble a mini version.",skip:"Every variant. Know decoder-only = GPT style, move on.",search:"transformer architecture explained"},
+    {id:"3.3",ttl:"Pretraining vs finetuning",learn:"Pretrain = predict next token on huge text. Finetune = adapt. LoRA/PEFT (cheap finetune) at name level.",skip:"Pretraining from scratch, RLHF internals (concept only).",search:"pretraining vs fine tuning llm lora explained"},
+    {id:"3.4",ttl:"Embeddings",learn:"Text to fixed vector. Similar meaning = close vectors (cosine/dot). Use an embedding API. Powers RAG + search.",skip:"Training gaming models, dimensionality theory.",search:"text embeddings explained vectors"},
+    {id:"3.5",ttl:"RAG",learn:"chunk, embed, vector DB, embed query, retrieve top-k, stuff into prompt, answer. Know each step's why.",skip:"Advanced rerankers, hybrid search, graph RAG (later).",search:"retrieval augmented generation rag explained"},
+    {id:"3.6",ttl:"Agents",learn:"LLM + loop + tools. Decide action, call tool, feed result back, repeat until done. You built MASS; understand the loop.",skip:"Heavy frameworks until you get the raw loop; multi-agent theory.",search:"llm agent tool calling loop explained"},
+    {id:"3.sq_pca",ttl:"Eigenvalues & PCA [Optional]",optional:true,learn:"Eigenvector = a direction a matrix only stretches. Eigenvalue = how much it stretches. Covariance matrix = how features vary together. PCA = find the eigenvectors of the covariance matrix, keep the top k (largest eigenvalues), project your data onto them. 'Variance explained': the top components keep most of the information. Do one 2x2 eigen by hand, then use numpy/sklearn PCA.",skip:"Don't derive SVD, don't prove diagonalization, don't learn kernel PCA or t-SNE/UMAP internals. Names only.",search:"eigenvalues eigenvectors pca visual intuition 3blue1brown"},
+    {id:"3.sq_kmeans",ttl:"k-means Clustering [Optional]",optional:true,learn:"The loop: pick k centers, assign each point to nearest center, move each center to its points' mean, repeat until stable. Do 2 iterations by hand on ~6 points. Pick k with the elbow method (plot inertia vs k, find the bend). Use it for real inside the RAG project: cluster chunks, spot near-duplicates.",skip:"Don't learn k-means++ internals, GMMs, or spectral clustering. Not now.",search:"kmeans clustering elbow method intuition statquest"}
+   ]}
+  ],
+  projects:[
+   {id:"3.P1",ttl:"Mini char-level transformer",learn:"Tiny GPT. Trains on text, generates text. LLMs demystified.",search:"build gpt from scratch char level nanogpt",
+    paper:["Pipeline: text, chars, ids, embeddings, +positional, transformer block(s), predict next char, sample, append.","Why positional info (attention is order-blind).","Generation loop: context, probs, sample, append."],
+    build:["Small public-domain text; char vocab.","Embedding + positional + 1-2 blocks (reuse 2.P3) + head.","Train next-char (cross-entropy), loss drops.","Generate from a seed; gibberish to word-like."],
+    done:["Generates source-style text; trace one token start to finish aloud."]},
+   {id:"3.P2",ttl:"RAG from scratch (no framework)",keystone:true,learn:"Raw RAG. Directly upgrades NewCycl work.",search:"rag from scratch python no framework",
+    paper:["Pipeline: docs, chunk, embed, store, query, embed, similarity top-k, prompt, LLM, answer.","Retrieval: score=cosine/dot vs all chunks, top-k.","3 tiny 2D vectors: rank chunks by dot product vs a query.","Failure modes: bad chunking, wrong k, irrelevant retrieval."],
+    build:["A few docs (your notes/PDF text).","Chunk, embed via API, store (vector DB or numpy+cosine).","Query, embed, top-k, prompt, LLM, answer.","In-doc question (right chunk + grounded answer); then out-of-doc, observe."],
+    done:["Correct chunk retrieved, grounded answer, hand-ranking matches code. Explain every RAG step."]},
+   {id:"3.P3",ttl:"Simple agent (tool-calling loop)",learn:"Minimal agent. The loop under MASS, raw.",search:"build llm agent tool calling from scratch python",
+    paper:["Loop: goal, LLM decides (answer OR tool), run tool, feed back, repeat, final.","1-2 tools with input/output contracts.","Stop condition.","Trace '47*89 then add 100' turn by turn."],
+    build:["Tools as plain functions.","LLM outputs structured action or final; parse it.","Loop: parse, execute, append, re-call, until final.","Test a tool task; add a 2nd tool, multi-step."],
+    done:["Multi-step task done via tools, paper trace matches loop, explain MASS's loop."]}
+  ],
+  gate:{title:"FINAL GATE (done)",criteria:[
+   {id:"g3a",text:"Mini-transformer generates text"},{id:"g3b",text:"Raw RAG works end-to-end"},{id:"g3c",text:"Agent loop calls tools, returns an answer"},{id:"g3d",text:"Teach all 3 aloud, 5 min each"}]},
+  resources:{
+    basic:[
+      {name:"Stanford CS224n - Lectures 1-5 (Manning)",url:"https://web.stanford.edu/class/cs224n/"},
+      {name:"Jay Alammar's blog - Visualizing NLP models",url:"https://jalammar.github.io/"},
+      {name:"Prompt Engineering Guide - promptingguide.ai",url:"https://www.promptingguide.ai/"},
+      {name:"Andrew Ng - ChatGPT Prompt Engineering",url:"https://www.deeplearning.ai/short-courses/chatgpt-prompt-engineering-for-developers/"}
+    ],
+    intermediate:[
+      {name:"HuggingFace NLP Course - Ch. 1-4",url:"https://huggingface.co/learn/nlp-course"},
+      {name:"The Illustrated LSTM - Jay Alammar",url:"https://jalammar.github.io/illustrated-lstm/"},
+      {name:"LangChain Python Docs + Cookbook",url:"https://python.langchain.com/docs/introduction/"},
+      {name:"Vector DBs: FAISS, Chroma, Pinecone (docs)",url:"https://faiss.ai/"}
+    ],
+    advanced:[
+      {name:"Attention Is All You Need - Vaswani et al., 2017",url:"https://arxiv.org/abs/1706.03762"},
+      {name:"LoRA - Hu et al., 2021 & QLoRA - Dettmers, 2023",url:"https://arxiv.org/abs/2106.09685"},
+      {name:"LlamaIndex Docs",url:"https://www.llamaindex.ai/"},
+      {name:"InstructGPT + DPO papers",url:"https://arxiv.org/abs/2203.02155"}
+    ],
+    optionalProject:"NLP/LLM: sentiment analyser comparing Naive Bayes vs a neural model."
+  }
+}
+];
+
+/* ================= SVGs & Assets generated in Code ================= */
+const SVG_MASCOT = {
+  happy: (w=40, h=40) => `<svg viewBox="0 0 100 100" width="${w}" height="${h}"><ellipse cx="50" cy="85" rx="20" ry="5" fill="rgba(0,0,0,0.15)"/><rect x="25" y="25" width="50" height="50" rx="18" fill="var(--color-blue)" stroke="var(--color-blue-dark)" stroke-width="4"/><rect x="32" y="32" width="36" height="30" rx="10" fill="#2A2A2A"/><circle cx="43" cy="47" r="5" fill="var(--color-green)"/><circle cx="57" cy="47" r="5" fill="var(--color-green)"/><circle cx="45" cy="45" r="1.5" fill="#FFF"/><circle cx="59" cy="45" r="1.5" fill="#FFF"/><line x1="50" y1="25" x2="50" y2="15" stroke="var(--color-blue-dark)" stroke-width="4" stroke-linecap="round"/><circle cx="50" cy="13" r="4" fill="var(--color-orange)"/><circle cx="37" cy="54" r="2" fill="var(--color-red)" opacity="0.6"/><circle cx="63" cy="54" r="2" fill="var(--color-red)" opacity="0.6"/><path d="M 47 52 Q 50 55 53 52" stroke="#FFF" stroke-width="2" stroke-linecap="round" fill="none"/></svg>`,
+  celebrating: (w=40, h=40) => `<svg viewBox="0 0 100 100" width="${w}" height="${h}"><ellipse cx="50" cy="85" rx="22" ry="6" fill="rgba(0,0,0,0.15)"/><path d="M 35 24 L 40 14 L 50 20 L 60 14 L 65 24 Z" fill="var(--color-gold)" stroke="var(--color-gold-dark)" stroke-width="2"/><circle cx="35" cy="24" r="1.5" fill="var(--color-red)"/><circle cx="40" cy="14" r="1.5" fill="var(--color-red)"/><circle cx="50" cy="20" r="1.5" fill="var(--color-red)"/><circle cx="60" cy="14" r="1.5" fill="var(--color-red)"/><circle cx="65" cy="24" r="1.5" fill="var(--color-red)"/><rect x="25" y="25" width="50" height="50" rx="18" fill="var(--color-blue)" stroke="var(--color-blue-dark)" stroke-width="4"/><rect x="32" y="32" width="36" height="30" rx="10" fill="#2A2A2A"/><path d="M 40 48 Q 43 44 46 48" stroke="var(--color-green)" stroke-width="3" stroke-linecap="round" fill="none"/><path d="M 54 48 Q 57 44 60 48" stroke="var(--color-green)" stroke-width="3" stroke-linecap="round" fill="none"/><line x1="50" y1="25" x2="50" y2="15" stroke="var(--color-blue-dark)" stroke-width="4" stroke-linecap="round"/><circle cx="50" cy="13" r="4" fill="var(--color-orange)"/><path d="M 15 30 L 20 35 M 20 30 L 15 35" stroke="var(--color-gold)" stroke-width="2" stroke-linecap="round"/><path d="M 80 30 L 85 35 M 85 30 L 80 35" stroke="var(--color-gold)" stroke-width="2" stroke-linecap="round"/><circle cx="37" cy="54" r="3" fill="var(--color-red)" opacity="0.8"/><circle cx="63" cy="54" r="3" fill="var(--color-red)" opacity="0.8"/><path d="M 45 51 Q 50 57 55 51 Z" fill="var(--color-red)" stroke="#FFF" stroke-width="1.5"/></svg>`,
+  sleeping: (w=40, h=40) => `<svg viewBox="0 0 100 100" width="${w}" height="${h}"><ellipse cx="50" cy="85" rx="20" ry="5" fill="rgba(0,0,0,0.15)"/><rect x="25" y="25" width="50" height="50" rx="18" fill="var(--color-blue)" stroke="var(--color-blue-dark)" stroke-width="4" opacity="0.8"/><rect x="32" y="32" width="36" height="30" rx="10" fill="#1C1C1C"/><line x1="39" y1="47" x2="45" y2="47" stroke="var(--color-gray-dark)" stroke-width="3" stroke-linecap="round"/><line x1="55" y1="47" x2="61" y2="47" stroke="var(--color-gray-dark)" stroke-width="3" stroke-linecap="round"/><text x="75" y="25" fill="var(--color-purple)" font-family="var(--font-main)" font-size="14" font-weight="bold">Z</text><text x="83" y="16" fill="var(--color-purple)" font-family="var(--font-main)" font-size="9" font-weight="bold">z</text><circle cx="50" cy="53" r="2" fill="#888"/></svg>`,
+  studying: (w=40, h=40) => `<svg viewBox="0 0 100 100" width="${w}" height="${h}"><ellipse cx="50" cy="85" rx="20" ry="5" fill="rgba(0,0,0,0.15)"/><rect x="25" y="25" width="50" height="50" rx="18" fill="var(--color-blue)" stroke="var(--color-blue-dark)" stroke-width="4"/><rect x="32" y="32" width="36" height="30" rx="10" fill="#2A2A2A"/><circle cx="43" cy="46" r="6" stroke="var(--color-gold)" stroke-width="2" fill="none"/><circle cx="57" cy="46" r="6" stroke="var(--color-gold)" stroke-width="2" fill="none"/><line x1="49" y1="46" x2="51" y2="46" stroke="var(--color-gold)" stroke-width="2"/><circle cx="43" cy="46" r="2.5" fill="var(--color-green)"/><circle cx="57" cy="46" r="2.5" fill="var(--color-green)"/><path d="M 47 54 Q 50 56 53 54" stroke="#FFF" stroke-width="1.5" stroke-linecap="round" fill="none"/><path d="M 35 70 Q 50 66 65 70 L 65 80 Q 50 76 35 80 Z" fill="#FFF" stroke="var(--color-red-dark)" stroke-width="2"/><line x1="50" y1="68" x2="50" y2="78" stroke="var(--color-red-dark)" stroke-width="2"/></svg>`
+};
+
+const SVG_ICONS = {
+  check: `<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>`,
+  lock: `<svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>`,
+  star: `<svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`,
+  trophy: `<svg viewBox="0 0 24 24"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v3c0 2.42 1.72 4.44 4.005 4.901C7.8 14.39 9.74 16 12 16s4.2-.1.9-.9C17.28 14.44 19 12.42 19 10V7c0-1.1-.9-2-2-2zm-12 5V7h2v3c0 .55-.45 1-1 1s-1-.45-1-1zm10 0c0 .55-.45 1-1 1s-1-.45-1-1V7h2v3zm-3 8h-4v2h4v-2z"/></svg>`,
+  key: `<svg viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>`,
+  sword: `<svg viewBox="0 0 24 24"><path d="M6 2v10h2V2H6zm6 0v6h2V2h-2zm6 0v14h2V2h-2zM4 14h16v2H4v-2zm4 4h8v2H8v-2zm-6 2h20v2H2v-2z"/></svg>`,
+  flame: `<svg viewBox="0 0 24 24"><path d="M19.48 12.35c-1.57-4.08-7.16-6.7-5.81-10.21-.1-.04-.21-.06-.31-.06-.81 0-1.64.44-2.22 1.25-1.15 1.6-1.52 3.9-.31 5.62.13.18.3.36.48.55.2.2.47.47.64.8.98 1.95.12 4.67-1.92 6.06-.47-.4-.81-1-1.04-1.6-.28-.75-.31-1.74-.1-2.67.06-.27-.21-.5-.45-.38-2.26 1.15-3.37 3.5-3.17 6.13.06.84.28 1.66.63 2.4.9 1.88 2.78 3.19 4.96 3.42 2.66.28 5.25-.79 6.84-2.88 1.63-2.14 2.1-5.11.81-7.83z"/></svg>`,
+  shield: `<svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>`
+};
+
+const ACHIEVEMENTS_DEF = [
+  { id: "first_topic", title: "First Step", desc: "Complete your first learning topic", icon: "🚀" },
+  { id: "phase_0_gate", title: "Math Graduate", desc: "Pass the Phase 0 Gate", icon: "📐" },
+  { id: "phase_1_gate", title: "ML Practitioner", desc: "Pass the Phase 1 Gate", icon: "🤖" },
+  { id: "paper_champion", title: "Theory First", desc: "Complete all paper steps in any project first", icon: "📝" },
+  { id: "streak_3", title: "Consistent", desc: "Reach a 3-day learning streak", icon: "🔥" },
+  { id: "streak_7", title: "Unstoppable", desc: "Reach a 7-day learning streak", icon: "⚡" },
+  { id: "keystone_master", title: "Key Master", desc: "Complete a keystone topic", icon: "🔑" }
+];
+
+/* ================= Audio Synthesizer ================= */
+let audioMuted = true;
+let audioCtx = null;
+
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+}
+
+function playSound(type) {
+  if (audioMuted) return;
+  initAudio();
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  
+  const now = audioCtx.currentTime;
+  
+  if (type === "click") {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(600, now);
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.12);
+  } else if (type === "success") {
+    const notes = [523.25, 659.25, 783.99, 1046.50];
+    const duration = 0.1;
+    notes.forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(freq, now + i * duration);
+      gain.gain.setValueAtTime(0.12, now + i * duration);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + i * duration + 0.2);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now + i * duration);
+      osc.stop(now + i * duration + 0.25);
+    });
+  } else if (type === "fanfare") {
+    const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 1046.50];
+    const times = [0, 0.08, 0.16, 0.24, 0.32, 0.40];
+    notes.forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(freq, now + times[i]);
+      gain.gain.setValueAtTime(0.08, now + times[i]);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + times[i] + 0.4);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now + times[i]);
+      osc.stop(now + times[i] + 0.45);
+    });
+  } else if (type === "locked") {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(150, now);
+    osc.frequency.setValueAtTime(120, now + 0.08);
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.linearRampToValueAtTime(0.0001, now + 0.18);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.18);
+  }
+}
+
+/* ================= Confetti System ================= */
+const canvas = document.getElementById("confetti-canvas");
+const ctx = canvas.getContext("2d");
+let particles = [];
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resizeCanvas);
+
+function spawnConfetti() {
+  resizeCanvas();
+  const colors = ["#58CC02", "#1CB0F6", "#FFC800", "#FF9600", "#FF4B4B", "#CE82FF"];
+  for (let i = 0; i < 100; i++) {
+    particles.push({
+      x: window.innerWidth / 2 + (Math.random() - 0.5) * 80,
+      y: window.innerHeight + 10,
+      vx: (Math.random() - 0.5) * 16,
+      vy: -Math.random() * 18 - 8,
+      size: Math.random() * 8 + 6,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rotation: Math.random() * Math.PI * 2,
+      vRotation: (Math.random() - 0.5) * 0.25,
+      opacity: 1
+    });
+  }
+}
+
+function updateParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.45; // gravity
+    p.vx *= 0.98; // drag
+    p.rotation += p.vRotation;
+    
+    if (p.vy > 0) {
+      p.opacity -= 0.02;
+    }
+    
+    if (p.opacity <= 0 || p.x < 0 || p.x > canvas.width) {
+      particles.splice(i, 1);
+      continue;
+    }
+    
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rotation);
+    ctx.fillStyle = p.color;
+    ctx.globalAlpha = p.opacity;
+    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+    ctx.restore();
+  }
+  
+  if (particles.length > 0) {
+    requestAnimationFrame(updateParticles);
+  }
+}
+
+function triggerCelebration(msg) {
+  spawnConfetti();
+  requestAnimationFrame(updateParticles);
+  playSound("success");
+  showToast(msg || "Nice job! Let's keep moving!");
+}
+
+/* ================= State Management ================= */
+/* ================= Profile & State Management ================= */
+const PROFILES_LIST_KEY = "zeroToModernAI_profiles";
+const ACTIVE_PROFILE_ID_KEY = "zeroToModernAI_active_profile_id";
+
+let profiles = [];
+let activeProfile = null;
+const AVATAR_COLORS = ["#05C46B", "#1CB0F6", "#FFC800", "#FF9600", "#FF4B4B", "#CE82FF", "#20BF6B", "#FF5252", "#3867D6", "#8854D0"];
+
+// Fallback pure-JS SHA-256 for offline file context
+function sha256Fallback(str) {
+  function rotateRight(n, x) {
+    return (x >>> n) | (x << (32 - n));
+  }
+  var mathPow = Math.pow;
+  var maxWord = mathPow(2, 32);
+  var lengthProperty = 'length';
+  var i, j;
+  var result = '';
+  var words = [];
+  var strLength = str[lengthProperty] * 8;
+  var hash = sha256Fallback.h = sha256Fallback.h || [];
+  var k = sha256Fallback.k = sha256Fallback.k || [];
+  var primeCounter = 0;
+
+  var isPossiblePrime = function(candidate) {
+    for (var i = 2, max = Math.sqrt(candidate); i <= max; i++) {
+      if (candidate % i === 0) return false;
+    }
+    return true;
+  };
+
+  while (primeCounter < 64) {
+    i = primeCounter + 2;
+    if (isPossiblePrime(i)) {
+      if (primeCounter < 8) {
+        hash[primeCounter] = (mathPow(i, .5) * maxWord) | 0;
+      }
+      k[primeCounter] = (mathPow(i, 1 / 3) * maxWord) | 0;
+      primeCounter++;
+    }
+  }
+
+  str += '\x80';
+  while (str[lengthProperty] % 64 - 56) str += '\x00';
+  for (i = 0; i < str[lengthProperty]; i++) {
+    j = str.charCodeAt(i);
+    if (j >> 8) return;
+    words[i >> 2] |= j << ((3 - i % 4) * 8);
+  }
+  words[words[lengthProperty]] = ((strLength / maxWord) | 0);
+  words[words[lengthProperty]] = (strLength | 0);
+
+  for (j = 0; j < words[lengthProperty]; ) {
+    var w = words.slice(j, j += 16);
+    var oldHash = hash.slice(0);
+    for (i = 0; i < 64; i++) {
+      var wItem = w[i];
+      if (i >= 16) {
+        var s0 = rotateRight(7, wItem = w[i - 15]) ^ rotateRight(18, wItem) ^ (wItem >>> 3);
+        var s1 = rotateRight(17, wItem = w[i - 2]) ^ rotateRight(19, wItem) ^ (wItem >>> 10);
+        w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+      }
+      var temp1 = (hash[7] + (rotateRight(6, hash[4]) ^ rotateRight(11, hash[4]) ^ rotateRight(25, hash[4])) + ((hash[4] & hash[5]) ^ (~hash[4] & hash[6])) + k[i] + (w[i] || 0)) | 0;
+      var temp2 = ((rotateRight(2, hash[0]) ^ rotateRight(13, hash[0]) ^ rotateRight(22, hash[0])) + ((hash[0] & hash[1]) ^ (hash[0] & hash[2]) ^ (hash[1] & hash[2]))) | 0;
+      hash = [(temp1 + temp2) | 0].concat(hash);
+      hash[4] = (hash[4] + temp1) | 0;
+      hash.pop();
+    }
+    for (i = 0; i < 8; i++) {
+      hash[i] = (hash[i] + oldHash[i]) | 0;
+    }
+  }
+
+  for (i = 0; i < 8; i++) {
+    for (j = 3; j + 1; j--) {
+      var b = (hash[i] >> (j * 8)) & 255;
+      result += (b < 16 ? '0' : '') + b.toString(16);
+    }
+  }
+  return result;
+}
+
+async function getSHA256Hash(text) {
+  if (!text) return "";
+  try {
+    if (window.crypto && window.crypto.subtle) {
+      const msgBuffer = new TextEncoder().encode(text);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+  } catch (e) {
+    console.warn("Crypto API failed, falling back to JS implementation", e);
+  }
+  return sha256Fallback(text);
+}
+
+function getProfileAvatarSVG(profileName, avatarColor, size=32) {
+  const initial = profileName ? profileName.charAt(0).toUpperCase() : "A";
+  const fontSize = Math.round(size * 0.45);
+  return `
+    <svg width="${size}" height="${size}" viewBox="0 0 100 100" style="display:block;">
+      <circle cx="50" cy="50" r="48" fill="${avatarColor || '#05C46B'}" stroke="var(--border-color)" stroke-width="4"/>
+      <text x="50" y="55" dominant-baseline="middle" text-anchor="middle" font-family="var(--font-main)" font-size="${fontSize * 2}" font-weight="900" fill="#FFFFFF">${initial}</text>
+    </svg>
+  `;
+}
+
+function loadProfilesList() {
+  try {
+    profiles = JSON.parse(localStorage.getItem(PROFILES_LIST_KEY)) || [];
+  } catch (e) {
+    profiles = [];
+  }
+}
+
+function saveProfilesList() {
+  localStorage.setItem(PROFILES_LIST_KEY, JSON.stringify(profiles));
+}
+
+function checkAndMigrateLegacyData() {
+  loadProfilesList();
+  const oldV2Data = localStorage.getItem("zeroToModernAI_v2");
+  if (profiles.length === 0 && oldV2Data) {
+    const defaultProfile = {
+      id: "profile_" + Date.now(),
+      name: "Mayank",
+      avatarColor: "#05C46B",
+      passwordHash: null
+    };
+    
+    profiles.push(defaultProfile);
+    saveProfilesList();
+    
+    localStorage.setItem("zeroToModernAI_v2_" + defaultProfile.id, oldV2Data);
+    const oldTheme = localStorage.getItem("zeroToModernAI_theme") || "light";
+    localStorage.setItem("zeroToModernAI_theme_" + defaultProfile.id, oldTheme);
+    
+    localStorage.setItem(ACTIVE_PROFILE_ID_KEY, defaultProfile.id);
+    console.log("Legacy data successfully migrated to profile: Mayank");
+  }
+}
+
+function renderProfilesGrid() {
+  const grid = document.getElementById("profileGrid");
+  if (!grid) return;
+  
+  if (profiles.length === 0) {
+    grid.innerHTML = `<div style="grid-column: 1/-1; color: var(--text-muted); font-size: 14px; padding: 12px 0; font-weight:800;">No profiles yet. Create one below to get started!</div>`;
+    return;
+  }
+  
+  let html = "";
+  profiles.forEach(p => {
+    const avatar = getProfileAvatarSVG(p.name, p.avatarColor, 56);
+    const passIndicator = p.passwordHash ? "🔒" : "🔓";
+    
+    html += `
+      <div class="profile-card" onclick="selectProfile('${p.id}')">
+        <button class="profile-delete-btn" onclick="deleteProfile('${p.id}', event)" title="Delete Profile">&times;</button>
+        <div style="margin-bottom: 8px;">${avatar}</div>
+        <div class="profile-card-name">${p.name}</div>
+        <div style="font-size:10px; color:var(--text-faint); margin-top:4px; font-weight:800;">${passIndicator} Lock</div>
+      </div>
+    `;
+  });
+  grid.innerHTML = html;
+}
+
+function selectProfile(profileId) {
+  const p = profiles.find(prof => prof.id === profileId);
+  if (!p) return;
+  
+  if (p.passwordHash) {
+    document.getElementById("passModalProfileId").value = profileId;
+    document.getElementById("passModalInput").value = "";
+    document.getElementById("passModalError").style.display = "none";
+    openModal("passwordModal");
+  } else {
+    loginAs(p);
+  }
+}
+
+function loginAs(profile) {
+  activeProfile = profile;
+  localStorage.setItem(ACTIVE_PROFILE_ID_KEY, profile.id);
+  
+  document.getElementById("profileScreen").style.display = "none";
+  
+  state = load();
+  initTheme();
+  
+  updateProgress();
+  
+  const dumpEl = document.getElementById("dumpTextarea");
+  if (dumpEl) dumpEl.value = state.dump || "";
+  
+  render();
+}
+
+function logoutProfile() {
+  activeProfile = null;
+  localStorage.removeItem(ACTIVE_PROFILE_ID_KEY);
+  
+  document.getElementById("profileScreen").style.display = "flex";
+  
+  renderProfilesGrid();
+  
+  document.getElementById("newProfileName").value = "";
+  document.getElementById("newProfilePassword").value = "";
+}
+
+function closePasswordModal() {
+  closeModal("passwordModal");
+}
+
+async function handleVerifyPassword(event) {
+  event.preventDefault();
+  const profileId = document.getElementById("passModalProfileId").value;
+  const password = document.getElementById("passModalInput").value;
+  
+  const p = profiles.find(prof => prof.id === profileId);
+  if (!p) return;
+  
+  const inputHash = await getSHA256Hash(password);
+  if (inputHash === p.passwordHash) {
+    closePasswordModal();
+    loginAs(p);
+  } else {
+    document.getElementById("passModalError").style.display = "block";
+    document.getElementById("passModalInput").value = "";
+    playSound("locked");
+  }
+}
+
+async function handleCreateProfile(event) {
+  event.preventDefault();
+  const nameInput = document.getElementById("newProfileName");
+  const passwordInput = document.getElementById("newProfilePassword");
+  
+  const name = nameInput.value.trim();
+  const password = passwordInput.value;
+  
+  if (!name) return;
+  
+  if (profiles.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+    alert("A profile with this name already exists!");
+    return;
+  }
+  
+  let passwordHash = null;
+  if (password) {
+    passwordHash = await getSHA256Hash(password);
+  }
+  
+  const newProfile = {
+    id: "profile_" + Date.now(),
+    name: name,
+    avatarColor: AVATAR_COLORS[profiles.length % AVATAR_COLORS.length],
+    passwordHash: passwordHash
+  };
+  
+  profiles.push(newProfile);
+  saveProfilesList();
+  
+  localStorage.setItem(`zeroToModernAI_v2_${newProfile.id}`, JSON.stringify({
+    checks: {},
+    dump: "",
+    activityDates: [],
+    consumedFreezeDates: [],
+    freezes: 1,
+    currentStreak: 0,
+    maxStreak: 0,
+    lastSeenLevel: 1,
+    achievements: []
+  }));
+  localStorage.setItem(`zeroToModernAI_theme_${newProfile.id}`, "light");
+  
+  nameInput.value = "";
+  passwordInput.value = "";
+  
+  renderProfilesGrid();
+  loginAs(newProfile);
+}
+
+function deleteProfile(profileId, event) {
+  if (event) event.stopPropagation();
+  
+  const p = profiles.find(prof => prof.id === profileId);
+  if (!p) return;
+  
+  const confirmDelete = confirm(`Are you sure you want to delete profile "${p.name}"? All progress, streak, and settings for this profile will be permanently lost!`);
+  if (!confirmDelete) return;
+  
+  localStorage.removeItem(`zeroToModernAI_v2_${profileId}`);
+  localStorage.removeItem(`zeroToModernAI_theme_${profileId}`);
+  
+  profiles = profiles.filter(prof => prof.id !== profileId);
+  saveProfilesList();
+  
+  renderProfilesGrid();
+  playSound("click");
+}
+
+function exportCurrentProfile() {
+  if (!activeProfile) return;
+  const pData = {
+    profile: activeProfile,
+    state: state,
+    theme: localStorage.getItem(getProfileThemeKey()) || "light"
+  };
+  
+  const blob = new Blob([JSON.stringify(pData, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Profile_${activeProfile.name}_Backup.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast("Profile backup downloaded successfully!");
+}
+
+function triggerProfileImport() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "application/json";
+  input.onchange = importProfileBackup;
+  input.click();
+}
+
+function importProfileBackup(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.profile || !data.profile.name || !data.state) {
+        alert("Invalid profile backup file!");
+        return;
+      }
+      
+      const name = data.profile.name;
+      const isDuplicate = profiles.some(p => p.name.toLowerCase() === name.toLowerCase());
+      
+      let targetProfile = null;
+      if (isDuplicate) {
+        const confirmOverwrite = confirm(`A profile named "${name}" already exists. Overwrite its data? (Click Cancel to import it as a new profile under a unique name)`);
+        if (confirmOverwrite) {
+          targetProfile = profiles.find(p => p.name.toLowerCase() === name.toLowerCase());
+        }
+      }
+      
+      if (!targetProfile) {
+        let finalName = name;
+        let counter = 1;
+        while (profiles.some(p => p.name.toLowerCase() === finalName.toLowerCase())) {
+          finalName = `${name} (${counter++})`;
+        }
+        
+        targetProfile = {
+          id: "profile_" + Date.now(),
+          name: finalName,
+          avatarColor: data.profile.avatarColor || AVATAR_COLORS[profiles.length % AVATAR_COLORS.length],
+          passwordHash: data.profile.passwordHash || null
+        };
+        profiles.push(targetProfile);
+        saveProfilesList();
+      }
+      
+      localStorage.setItem(`zeroToModernAI_v2_${targetProfile.id}`, JSON.stringify(data.state));
+      localStorage.setItem(`zeroToModernAI_theme_${targetProfile.id}`, data.theme || "light");
+      
+      alert(`Successfully imported profile: ${targetProfile.name}!`);
+      loginAs(targetProfile);
+      
+    } catch(err) {
+      alert("Error parsing backup file: " + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// State Load/Save Isolation
+let state = {};
+
+function getProfileStorageKey() {
+  return activeProfile ? `zeroToModernAI_v2_${activeProfile.id}` : "zeroToModernAI_v2_temp";
+}
+
+function load() {
+  let saved = {};
+  try {
+    const key = getProfileStorageKey();
+    saved = JSON.parse(localStorage.getItem(key)) || {};
+  } catch (e) {
+    saved = {};
+  }
+  
+  // Initialize default fields
+  if (!saved.checks) saved.checks = {};
+  if (saved.dump === undefined) saved.dump = "";
+  if (!saved.activityDates) saved.activityDates = [];
+  if (!saved.consumedFreezeDates) saved.consumedFreezeDates = [];
+  if (saved.freezes === undefined) saved.freezes = 1;
+  if (saved.currentStreak === undefined) saved.currentStreak = 0;
+  if (saved.maxStreak === undefined) saved.maxStreak = 0;
+  if (saved.lastSeenLevel === undefined) saved.lastSeenLevel = 1;
+  if (!saved.achievements) saved.achievements = [];
+  
+  return saved;
+}
+
+function save() {
+  if (!activeProfile) return;
+  const key = getProfileStorageKey();
+  localStorage.setItem(key, JSON.stringify(state));
+}
+
+const on = id => !!state.checks[id];
+
+function toggle(id, val) {
+  state.checks[id] = val;
+  if (val) {
+    markActivity();
+  } else {
+    updateProgress();
+  }
+  save();
+  render();
+}
+
+/* ================= XP & Level Calculations ================= */
+function getXP() {
+  let xp = 0;
+  for (const id in state.checks) {
+    if (state.checks[id]) {
+      if (id.startsWith("t_")) xp += 10;
+      else if (id.startsWith("pp_")) xp += 10;
+      else if (id.startsWith("pb_")) xp += 15;
+      else if (id.startsWith("pd_")) xp += 20;
+      else if (id.startsWith("gate_")) xp += 30;
+    }
+  }
+  return xp;
+}
+
+function getLevelInfo(xp) {
+  let level = 1;
+  let nextXP = 100;
+  let prevXP = 0;
+  
+  if (xp >= 2700) {
+    level = 10 + Math.floor((xp - 2700) / 500);
+    prevXP = 2700 + (level - 10) * 500;
+    nextXP = prevXP + 500;
+  } else if (xp >= 2200) { level = 9; prevXP = 2200; nextXP = 2700; }
+  else if (xp >= 1750) { level = 8; prevXP = 1750; nextXP = 2200; }
+  else if (xp >= 1350) { level = 7; prevXP = 1350; nextXP = 1750; }
+  else if (xp >= 1000) { level = 6; prevXP = 1000; nextXP = 1350; }
+  else if (xp >= 700)  { level = 5; prevXP = 700; nextXP = 1000; }
+  else if (xp >= 450)  { level = 4; prevXP = 450; nextXP = 700; }
+  else if (xp >= 250)  { level = 3; prevXP = 250; nextXP = 450; }
+  else if (xp >= 100)  { level = 2; prevXP = 100; nextXP = 250; }
+  
+  let rank = "Initiate";
+  if (level >= 8) rank = "AI Architect";
+  else if (level >= 5) rank = "ML Engineer";
+  else if (level >= 3) rank = "Apprentice";
+  
+  return { level, rank, xpInLevel: xp - prevXP, neededForNext: nextXP - prevXP };
+}
+
+function checkLevelUp(xp) {
+  const info = getLevelInfo(xp);
+  const lastLevel = state.lastSeenLevel || 1;
+  
+  if (info.level > lastLevel) {
+    state.lastSeenLevel = info.level;
+    
+    // Reward a streak freeze, capped at 2
+    let freezeRewarded = false;
+    if ((state.freezes || 0) < 2) {
+      state.freezes = (state.freezes || 0) + 1;
+      freezeRewarded = true;
+    }
+    
+    save();
+    
+    // Full screen level-up celebration modal
+    showLevelUpModal(lastLevel, info.level, info.rank, freezeRewarded);
+  }
+}
+
+/* ================= Streak System & Calendar ================= */
+function getLocalDateString(d = new Date()) {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function markActivity() {
+  const todayStr = getLocalDateString();
+  if (!state.activityDates.includes(todayStr)) {
+    state.activityDates.push(todayStr);
+  }
+  updateProgress();
+}
+
+function updateProgress() {
+  const xp = getXP();
+  checkLevelUp(xp);
+  recalculateStreak();
+  checkAchievements();
+}
+
+function recalculateStreak() {
+  const dates = new Set(state.activityDates || []);
+  const consumed = new Set(state.consumedFreezeDates || []);
+  
+  const todayStr = getLocalDateString();
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = getLocalDateString(yesterday);
+  
+  let tempFreezes = state.freezes !== undefined ? state.freezes : 1;
+  let currentStreak = 0;
+  
+  const isTodayActive = dates.has(todayStr) || consumed.has(todayStr);
+  const isYesterdayActive = dates.has(yesterdayStr) || consumed.has(yesterdayStr);
+  
+  let activeStreakFound = false;
+  let checkDate = new Date();
+  
+  if (isTodayActive) {
+    activeStreakFound = true;
+  } else if (isYesterdayActive) {
+    activeStreakFound = true;
+    checkDate = yesterday;
+  } else {
+    // Neither today nor yesterday was active. Can we use a freeze?
+    const dby = new Date();
+    dby.setDate(dby.getDate() - 2);
+    const dbyStr = getLocalDateString(dby);
+    const wasDbyActive = dates.has(dbyStr) || consumed.has(dbyStr);
+    
+    if (wasDbyActive && tempFreezes > 0) {
+      tempFreezes--;
+      consumed.add(yesterdayStr);
+      state.consumedFreezeDates.push(yesterdayStr);
+      state.consumedFreezeDates = [...new Set(state.consumedFreezeDates)];
+      activeStreakFound = true;
+      checkDate = yesterday;
+    } else if (!wasDbyActive && tempFreezes > 1) {
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+      const tdaStr = getLocalDateString(threeDaysAgo);
+      const wasTdaActive = dates.has(tdaStr) || consumed.has(tdaStr);
+      if (wasTdaActive) {
+        tempFreezes -= 2;
+        consumed.add(yesterdayStr);
+        consumed.add(dbyStr);
+        state.consumedFreezeDates.push(yesterdayStr, dbyStr);
+        state.consumedFreezeDates = [...new Set(state.consumedFreezeDates)];
+        activeStreakFound = true;
+        checkDate = yesterday;
+      }
+    }
+  }
+  
+  if (activeStreakFound) {
+    let curr = new Date(checkDate);
+    while (true) {
+      const currStr = getLocalDateString(curr);
+      if (dates.has(currStr) || consumed.has(currStr)) {
+        currentStreak++;
+      } else {
+        if (tempFreezes > 0) {
+          tempFreezes--;
+          consumed.add(currStr);
+          state.consumedFreezeDates.push(currStr);
+          state.consumedFreezeDates = [...new Set(state.consumedFreezeDates)];
+          currentStreak++;
+        } else {
+          break;
+        }
+      }
+      curr.setDate(curr.getDate() - 1);
+    }
+  }
+  
+  state.freezes = tempFreezes;
+  state.currentStreak = currentStreak;
+  if (currentStreak > (state.maxStreak || 0)) {
+    state.maxStreak = currentStreak;
+  }
+  save();
+}
+
+/* ================= Achievements Check ================= */
+function checkAchievements() {
+  if (!state.achievements) state.achievements = [];
+  const newlyUnlocked = [];
+  
+  const unlock = (id) => {
+    if (!state.achievements.includes(id)) {
+      state.achievements.push(id);
+      newlyUnlocked.push(id);
+    }
+  };
+  
+  const topicsDone = Object.keys(state.checks).filter(k => k.startsWith("t_") && state.checks[k]);
+  if (topicsDone.length >= 1) unlock("first_topic");
+  
+  const p0GatePassed = roadmap[0].gate.criteria.every(c => state.checks["gate_" + c.id]);
+  if (p0GatePassed) unlock("phase_0_gate");
+  
+  const p1GatePassed = roadmap[1].gate.criteria.every(c => state.checks["gate_" + c.id]);
+  if (p1GatePassed) unlock("phase_1_gate");
+  
+  let paperChamp = false;
+  roadmap.forEach(p => {
+    (p.projects || []).forEach(pr => {
+      const buildChecked = (pr.build || []).some((_, i) => state.checks["pb_" + pr.id + "_" + i]);
+      if (buildChecked) paperChamp = true;
+    });
+  });
+  if (paperChamp) unlock("paper_champion");
+  
+  if (state.currentStreak >= 3) unlock("streak_3");
+  if (state.currentStreak >= 7) unlock("streak_7");
+  
+  let keystoneCompleted = false;
+  roadmap.forEach(p => {
+    (p.groups || []).forEach(g => {
+      g.items.forEach(t => {
+        if (t.keystone && state.checks["t_" + t.id]) keystoneCompleted = true;
+      });
+    });
+  });
+  if (keystoneCompleted) unlock("keystone_master");
+  
+  if (newlyUnlocked.length > 0) {
+    save();
+    newlyUnlocked.forEach(id => {
+      const ach = ACHIEVEMENTS_DEF.find(a => a.id === id);
+      if (ach) {
+        showAchievementModal(ach);
+      }
+    });
+  }
+}
+
+/* ================= Derived States & Path locking ================= */
+function leafIds(p) {
+  let ids = [];
+  (p.groups || []).forEach(g => g.items.forEach(t => ids.push("t_" + t.id)));
+  (p.projects || []).forEach(pr => {
+    (pr.paper || []).forEach((_, i) => ids.push("pp_" + pr.id + "_" + i));
+    (pr.build || []).forEach((_, i) => ids.push("pb_" + pr.id + "_" + i));
+    (pr.done || []).forEach((_, i) => ids.push("pd_" + pr.id + "_" + i));
+  });
+  p.gate.criteria.forEach(c => ids.push("gate_" + c.id));
+  return ids;
+}
+
+const gatePassed = p => p.gate.criteria.every(c => on("gate_" + c.id));
+const unlocked = idx => idx === 0 || gatePassed(roadmap[idx - 1]);
+
+function phasePct(p) {
+  const ids = leafIds(p);
+  return ids.length ? Math.round(ids.filter(on).length / ids.length * 100) : 0;
+}
+
+function getPhaseNodes(p) {
+  const nodes = [];
+  (p.groups || []).forEach(g => {
+    g.items.forEach(t => {
+      nodes.push({
+        type: t.optional ? "sidequest" : "topic",
+        id: "t_" + t.id,
+        title: t.ttl,
+        code: t.id,
+        data: t,
+        keystone: !!t.keystone,
+        optional: !!t.optional
+      });
+    });
+  });
+  
+  (p.projects || []).forEach(pr => {
+    nodes.push({
+      type: "project",
+      id: pr.id,
+      title: pr.ttl,
+      code: pr.id,
+      data: pr,
+      keystone: true
+    });
+  });
+  
+  nodes.push({
+    type: "gate",
+    id: "gate_" + p.id,
+    title: p.gate.title,
+    code: "GATE",
+    data: p.gate,
+    keystone: true
+  });
+  
+  return nodes;
+}
+
+function getCurrentTask() {
+  for (let i = 0; i < roadmap.length; i++) {
+    const p = roadmap[i];
+    if (!unlocked(i)) continue;
+    
+    for (const g of (p.groups || [])) {
+      for (const t of g.items) {
+        if (t.optional) continue; // Skip optional sidequests!
+        if (!state.checks["t_" + t.id]) {
+          return { type: "topic", phaseIndex: i, phase: p, topic: t, id: "t_" + t.id };
+        }
+      }
+    }
+    
+    for (const pr of (p.projects || [])) {
+      const paperIDs = (pr.paper || []).map((_, idx) => `pp_${pr.id}_${idx}`);
+      const buildIDs = (pr.build || []).map((_, idx) => `pb_${pr.id}_${idx}`);
+      const doneIDs = (pr.done || []).map((_, idx) => `pd_${pr.id}_${idx}`);
+      const allIDs = [...paperIDs, ...buildIDs, ...doneIDs];
+      const incomplete = allIDs.find(id => !state.checks[id]);
+      if (incomplete) {
+        return { type: "project", phaseIndex: i, phase: p, project: pr, id: pr.id, incompleteId: incomplete };
+      }
+    }
+    
+    const gateIDs = p.gate.criteria.map(c => `gate_${c.id}`);
+    const incompleteGate = gateIDs.find(id => !state.checks[id]);
+    if (incompleteGate) {
+      return { type: "gate", phaseIndex: i, phase: p, gate: p.gate, id: "gate_" + p.id, incompleteId: incompleteGate };
+    }
+  }
+  return null;
+}
+
+function getNodeStatus(node, currentTask) {
+  let isComplete = false;
+  if (node.type === "topic" || node.type === "sidequest") {
+    isComplete = !!state.checks[node.id];
+  } else if (node.type === "project") {
+    const pr = node.data;
+    const paperIDs = (pr.paper || []).map((_, idx) => `pp_${pr.id}_${idx}`);
+    const buildIDs = (pr.build || []).map((_, idx) => `pb_${pr.id}_${idx}`);
+    const doneIDs = (pr.done || []).map((_, idx) => `pd_${pr.id}_${idx}`);
+    isComplete = [...paperIDs, ...buildIDs, ...doneIDs].every(id => state.checks[id]);
+  } else if (node.type === "gate") {
+    const gate = node.data;
+    isComplete = gate.criteria.every(c => state.checks["gate_" + c.id]);
+  }
+  
+  if (isComplete) return "completed";
+  
+  if (node.type === "sidequest") {
+    // Sidequests are unlocked (current) as long as their phase is active
+    return "current";
+  }
+  
+  if (currentTask) {
+    if (node.type === "topic" && currentTask.type === "topic" && node.id === currentTask.id) return "current";
+    if (node.type === "project" && currentTask.type === "project" && node.id === currentTask.id) return "current";
+    if (node.type === "gate" && currentTask.type === "gate" && node.id === currentTask.id) return "current";
+  }
+  
+  return "locked";
+}
+
+function renderResourcesHTML(p) {
+  if (!p.resources) return "";
+  
+  // Basic list
+  let basicHTML = "";
+  (p.resources.basic || []).forEach(r => {
+    basicHTML += `<li>💡 <a href="${r.url}" target="_blank" rel="noopener">${r.name}</a></li>`;
+  });
+  
+  // Intermediate list
+  let interHTML = "";
+  (p.resources.intermediate || []).forEach(r => {
+    interHTML += `<li>🔍 <a href="${r.url || 'https://www.google.com/search?q=' + encodeURIComponent(r.name)}" target="_blank" rel="noopener">${r.name}</a></li>`;
+  });
+  
+  // Advanced list
+  let advHTML = "";
+  (p.resources.advanced || []).forEach(r => {
+    advHTML += `<li>⚡ <a href="${r.url || 'https://www.google.com/search?q=' + encodeURIComponent(r.name)}" target="_blank" rel="noopener">${r.name}</a></li>`;
+  });
+  
+  // Computer Vision optional (Phase 2 specific)
+  let cvHTML = "";
+  if (p.resources.cv) {
+    let cvBasicHTML = "";
+    (p.resources.cv.basic || []).forEach(r => {
+      cvBasicHTML += `<li>🖼️ <a href="${r.url}" target="_blank" rel="noopener">${r.name}</a></li>`;
+    });
+    let cvParkedHTML = "";
+    (p.resources.cv.parked || []).forEach(r => {
+      cvParkedHTML += `<li>💤 ${r.name}</li>`;
+    });
+    
+    cvHTML = `
+      <div class="resources-tier" style="margin-top: 12px; border-top: 1px dashed var(--border-color); padding-top: 12px;">
+        <div class="resources-tier-title">Computer Vision (Optional)</div>
+        <ul class="resources-list">
+          ${cvBasicHTML}
+        </ul>
+        <details class="resources-details-box" style="margin-top:8px;">
+          <summary class="resources-details-summary">Show cv advanced/parked</summary>
+          <ul class="resources-list" style="margin-top:6px;">
+            ${cvParkedHTML}
+          </ul>
+        </details>
+      </div>
+    `;
+  }
+  
+  // Portfolio projects
+  let portfolioHTML = "";
+  if (p.resources.optionalProject) {
+    portfolioHTML = `
+      <div class="portfolio-project-box">
+        <strong>Optional Portfolio Project (Pick at most one)</strong>
+        ${p.resources.optionalProject}
+      </div>
+    `;
+  }
+  
+  return `
+    <div class="resources-panel">
+      <div class="resources-title">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--color-green)"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>
+        <span>Learning Resources & Tools</span>
+      </div>
+      
+      <div class="resources-tier">
+        <div class="resources-tier-title">Basic Resources (Use-now)</div>
+        <ul class="resources-list">
+          ${basicHTML}
+        </ul>
+      </div>
+      
+      <details class="resources-details-box">
+        <summary class="resources-details-summary">Go deeper (parked tiers)</summary>
+        
+        <div class="resources-tier" style="margin-top: 12px;">
+          <div class="resources-tier-title parked">Intermediate Resources</div>
+          <ul class="resources-list">
+            ${interHTML}
+          </ul>
+        </div>
+        
+        <div class="resources-tier" style="margin-top: 12px;">
+          <div class="resources-tier-title parked">Advanced Resources</div>
+          <ul class="resources-list">
+            ${advHTML}
+          </ul>
+        </div>
+      </details>
+      
+      ${cvHTML}
+      ${portfolioHTML}
+    </div>
+  `;
+}
+
+/* ================= Winding Path Render ================= */
+const offsetClasses = ["offset-center", "offset-right-1", "offset-right-2", "offset-right-1", "offset-center", "offset-left-1", "offset-left-2", "offset-left-1"];
+const unitColors = ["var(--color-green)", "var(--color-blue)", "var(--color-purple)", "var(--color-orange)"];
+
+function renderLearningPath() {
+  const container = document.getElementById("learningPath");
+  container.innerHTML = "";
+  
+  const currentTask = getCurrentTask();
+  
+  roadmap.forEach((p, idx) => {
+    const isPhaseUnlocked = unlocked(idx);
+    const progress = phasePct(p);
+    
+    const unitDiv = document.createElement("div");
+    unitDiv.className = "unit-container";
+    unitDiv.id = "phase-banner-" + idx;
+    
+    const color = unitColors[idx % unitColors.length];
+    const bannerHTML = `
+      <div class="unit-banner" style="background-color: ${color}">
+        <div class="unit-banner-left">
+          <h2>Phase ${idx}: ${p.name.replace(/^Phase \d+ - /, "")}</h2>
+          <p>${p.theory}</p>
+        </div>
+        <div class="unit-banner-right">
+          <div class="unit-progress-circle">
+            <svg viewBox="0 0 36 36" class="circular-chart">
+              <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              <path class="circle" stroke-dasharray="${progress}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+            </svg>
+            <span class="unit-pct">${progress}%</span>
+          </div>
+        </div>
+      </div>
+    `;
+    unitDiv.innerHTML = bannerHTML;
+    
+    if (p.pyslice) {
+      const sliceCard = document.createElement("div");
+      sliceCard.className = "python-slice-card";
+      sliceCard.innerHTML = `<strong>Python Slice:</strong> ${p.pyslice}`;
+      unitDiv.appendChild(sliceCard);
+    }
+    
+    const pathArea = document.createElement("div");
+    pathArea.className = "path-nodes-container";
+    pathArea.innerHTML = `<div class="path-connector-line"></div>`;
+    
+    if (!isPhaseUnlocked) {
+      pathArea.style.opacity = "0.5";
+      pathArea.style.filter = "grayscale(1)";
+    }
+    
+    const nodes = getPhaseNodes(p);
+    let lastMainWrapper = null;
+    let mainNodeCount = 0;
+    let sideQuestToggle = true;
+    
+    nodes.forEach((node) => {
+      const status = isPhaseUnlocked ? getNodeStatus(node, currentTask) : "locked";
+      
+      let nodeBtnClass = "node-btn";
+      let insideIcon = SVG_ICONS.star;
+      
+      if (node.type === "project") {
+        nodeBtnClass += " project-boss";
+        insideIcon = SVG_ICONS.sword;
+      } else if (node.type === "gate") {
+        nodeBtnClass += " gate-boss";
+        insideIcon = SVG_ICONS.key;
+      } else if (node.type === "sidequest") {
+        nodeBtnClass += " sidequest";
+        insideIcon = SVG_ICONS.star;
+      } else if (node.keystone) {
+        nodeBtnClass += " keystone";
+      }
+      
+      nodeBtnClass += ` ${status}`;
+      
+      if (status === "completed") {
+        insideIcon = SVG_ICONS.check;
+      } else if (status === "locked") {
+        insideIcon = SVG_ICONS.lock;
+      }
+      
+      if (node.type === "sidequest") {
+        if (lastMainWrapper) {
+          const sidequestEl = document.createElement("div");
+          const branchSide = sideQuestToggle ? "branch-right" : "branch-left";
+          sideQuestToggle = !sideQuestToggle;
+          
+          sidequestEl.className = `sidequest-node ${branchSide}`;
+          sidequestEl.innerHTML = `
+            <button class="${nodeBtnClass}" onclick="clickNode('topic', '${node.id}', '${status}', ${idx})" aria-label="${node.title}">
+              ${insideIcon}
+            </button>
+            <span class="node-label" style="background-color: var(--active-node-bg); border-color: var(--color-purple);">${node.code}: ${node.title}</span>
+          `;
+          
+          const lineEl = document.createElement("div");
+          lineEl.className = "sidequest-node-line";
+          
+          lastMainWrapper.appendChild(sidequestEl);
+          lastMainWrapper.appendChild(lineEl);
+        }
+      } else {
+        const wrapper = document.createElement("div");
+        const offsetClass = offsetClasses[mainNodeCount % offsetClasses.length];
+        mainNodeCount++;
+        
+        wrapper.className = `node-wrapper ${offsetClass}`;
+        wrapper.style.position = "relative";
+        
+        wrapper.innerHTML = `
+          <button class="${nodeBtnClass}" onclick="clickNode('${node.type}', '${node.id}', '${status}', ${idx})" aria-label="${node.title}">
+            ${insideIcon}
+          </button>
+          <span class="node-label">${node.code}: ${node.title}</span>
+        `;
+        
+        pathArea.appendChild(wrapper);
+        lastMainWrapper = wrapper;
+        sideQuestToggle = true;
+      }
+    });
+    
+    unitDiv.appendChild(pathArea);
+    
+    // Add resources panel
+    const resHTML = renderResourcesHTML(p);
+    if (resHTML) {
+      const resWrapper = document.createElement("div");
+      resWrapper.innerHTML = resHTML;
+      unitDiv.appendChild(resWrapper.firstElementChild);
+    }
+    
+    container.appendChild(unitDiv);
+  });
+}
+
+function clickNode(type, id, status, phaseIndex) {
+  if (status === "locked") {
+    playSound("locked");
+    showToast("This skill is locked. Complete previous skills first!");
+    return;
+  }
+  
+  playSound("click");
+  const p = roadmap[phaseIndex];
+  
+  if (type === "topic") {
+    const group = p.groups.find(g => g.items.some(t => "t_" + t.id === id));
+    const topic = group.items.find(t => "t_" + t.id === id);
+    openLessonModal(topic, id, status);
+  } else if (type === "project") {
+    const pr = p.projects.find(proj => proj.id === id);
+    openProjectModal(pr, id);
+  } else if (type === "gate") {
+    openGateModal(p, id);
+  }
+}
+
+/* ================= Current Quest Highlight Card ================= */
+function renderCurrentQuest() {
+  const task = getCurrentTask();
+  const containerHTML = (taskCardId) => {
+    const cardEl = document.getElementById(taskCardId);
+    if (!cardEl) return;
+    
+    if (!task) {
+      cardEl.innerHTML = `
+        <div class="quest-card-header">All clear! 🚀</div>
+        <h3 class="quest-card-title">Everything Completed</h3>
+        <p class="quest-card-body">You've finished the roadmap! Go build cool things and teach them aloud.</p>
+      `;
+      return;
+    }
+    
+    let title = "";
+    let body = "";
+    let actionHTML = "";
+    let header = "Next Active Quest";
+    
+    if (task.type === "topic") {
+      title = `${task.topic.id}: ${task.topic.ttl}`;
+      body = task.topic.learn;
+      actionHTML = `
+        <button class="btn-chunky btn-green" onclick="enterFocusMode('${task.id}')">Start Focus</button>
+        <button class="btn-chunky btn-gray btn-sm" onclick="window.open('https://www.youtube.com/results?search_query=${encodeURIComponent(task.topic.search)}', '_blank')">YouTube</button>
+        <button class="btn-chunky btn-gray btn-sm" onclick="window.open('https://www.google.com/search?q=${encodeURIComponent(task.topic.search)}', '_blank')">Google</button>
+      `;
+    } else if (task.type === "project") {
+      title = `Project: ${task.project.ttl}`;
+      body = `Next up: ${task.project.learn}. Work on this project in the roadmap path or click details to complete steps.`;
+      actionHTML = `
+        <button class="btn-chunky btn-blue" onclick="clickNode('project', '${task.project.id}', 'current', ${task.phaseIndex})">Open Checklist</button>
+      `;
+    } else if (task.type === "gate") {
+      title = `Gate to Next Zone`;
+      body = `Prove your capability to unlock the next phase: ${task.gate.title}.`;
+      actionHTML = `
+        <button class="btn-chunky btn-red" onclick="clickNode('gate', 'gate_${task.phase.id}', 'current', ${task.phaseIndex})">Open Gate</button>
+      `;
+    }
+    
+    cardEl.innerHTML = `
+      <div class="quest-card-header">${header}</div>
+      <h3 class="quest-card-title">${title}</h3>
+      <p class="quest-card-body">${body}</p>
+      <div class="quest-card-actions">${actionHTML}</div>
+    `;
+  };
+  
+  containerHTML("currentQuestCard");
+  containerHTML("desktopCurrentQuestCard");
+}
+
+/* ================= Modal Control Scripts ================= */
+function openModal(id) {
+  document.getElementById(id).classList.add("open");
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove("open");
+}
+
+function openLessonModal(topic, checkId, status) {
+  const modal = document.getElementById("lessonModal");
+  document.getElementById("modalTag").textContent = `TOPIC ${topic.id}`;
+  document.getElementById("modalTitle").textContent = topic.ttl;
+  
+  let checkText = status === "completed" ? "Mark Incomplete" : "Mark Completed";
+  let completeBtnStyle = status === "completed" ? "btn-gray" : "btn-green";
+  
+  let bodyHTML = `
+    <div class="focus-tip-box learn" style="margin-bottom: 12px;">
+      <strong style="display:block; text-transform:uppercase; font-size:10px; margin-bottom:4px;">Learn Instructions</strong>
+      ${topic.learn}
+    </div>
+    <div class="focus-tip-box skip" style="margin-bottom: 16px;">
+      <strong style="display:block; text-transform:uppercase; font-size:10px; margin-bottom:4px;">Skipped / Out-of-Scope</strong>
+      ${topic.skip}
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <span style="font-size:12px; color:var(--text-muted); font-family:var(--font-mono);">Search: "${topic.search}"</span>
+      <div style="display:flex; gap:8px;">
+        <button class="btn-chunky btn-gray btn-sm" onclick="window.open('https://www.youtube.com/results?search_query=${encodeURIComponent(topic.search)}', '_blank')">YouTube</button>
+        <button class="btn-chunky btn-gray btn-sm" onclick="window.open('https://www.google.com/search?q=${encodeURIComponent(topic.search)}', '_blank')">Google</button>
+      </div>
+    </div>
+    <div style="display:flex; gap:12px;">
+      <button class="btn-chunky btn-blue" style="flex:1;" onclick="enterFocusMode('${checkId}'); closeModal('lessonModal');">Isolate Focus</button>
+      <button class="btn-chunky ${completeBtnStyle}" style="flex:1;" onclick="toggleTopicCheckbox('${checkId}', ${!!topic.keystone}, '${topic.ttl}', ${status === "completed"}); closeModal('lessonModal');">${checkText}</button>
+    </div>
+  `;
+  
+  document.getElementById("modalBody").innerHTML = bodyHTML;
+  openModal("lessonModal");
+}
+
+function toggleTopicCheckbox(id, isKeystone, title, isCompleted) {
+  if (!isCompleted) {
+    if (isKeystone) {
+      const confirmRecall = confirm(`M1 Recall Check: Can you explain "${title}" from memory with no notes?\n\nClick OK if you can explain it. Click Cancel to restudy first.`);
+      if (!confirmRecall) return;
+    }
+    toggle(id, true);
+    triggerCelebration();
+  } else {
+    toggle(id, false);
+  }
+}
+
+function openProjectModal(pr, id) {
+  const modal = document.getElementById("lessonModal");
+  document.getElementById("modalTag").textContent = `PROJECT CHECKLIST`;
+  document.getElementById("modalTitle").textContent = pr.ttl;
+  
+  const renderProjectContent = () => {
+    const isPaperDone = (pr.paper || []).every((_, i) => on(`pp_${pr.id}_${i}`));
+    
+    let paperListHTML = (pr.paper || []).map((step, i) => {
+      const stepId = `pp_${pr.id}_${i}`;
+      return `
+        <label class="project-step-item ${on(stepId) ? 'checked' : ''}">
+          <input type="checkbox" ${on(stepId) ? 'checked' : ''} onchange="toggleProjectStep('${stepId}', '${pr.id}')">
+          <span>${step}</span>
+        </label>
+      `;
+    }).join("");
+    
+    let buildListHTML = (pr.build || []).map((step, i) => {
+      const stepId = `pb_${pr.id}_${i}`;
+      return `
+        <label class="project-step-item ${on(stepId) ? 'checked' : ''}" style="${!isPaperDone ? 'opacity:0.5; cursor:not-allowed;' : ''}">
+          <input type="checkbox" ${on(stepId) ? 'checked' : ''} ${!isPaperDone ? 'disabled' : ''} onchange="toggleProjectStep('${stepId}', '${pr.id}')">
+          <span>${!isPaperDone ? '🔒 ' : ''}${step}</span>
+        </label>
+      `;
+    }).join("");
+    
+    let doneListHTML = (pr.done || []).map((step, i) => {
+      const stepId = `pd_${pr.id}_${i}`;
+      return `
+        <label class="project-step-item ${on(stepId) ? 'checked' : ''}" style="${!isPaperDone ? 'opacity:0.5; cursor:not-allowed;' : ''}">
+          <input type="checkbox" ${on(stepId) ? 'checked' : ''} ${!isPaperDone ? 'disabled' : ''} onchange="toggleProjectStep('${stepId}', '${pr.id}')">
+          <span>${!isPaperDone ? '🔒 ' : ''}${step}</span>
+        </label>
+      `;
+    }).join("");
+    
+    document.getElementById("modalBody").innerHTML = `
+      <div style="font-size:13.5px; margin-bottom:12px;"><strong>Overview:</strong> ${pr.learn}</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <span style="font-size:12px; color:var(--text-muted); font-family:var(--font-mono);">Search: "${pr.search}"</span>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-chunky btn-gray btn-sm" onclick="window.open('https://www.youtube.com/results?search_query=${encodeURIComponent(pr.search)}', '_blank')">YouTube</button>
+          <button class="btn-chunky btn-gray btn-sm" onclick="window.open('https://www.google.com/search?q=${encodeURIComponent(pr.search)}', '_blank')">Google</button>
+        </div>
+      </div>
+      
+      <div class="project-steps">
+        <div class="project-step-section">
+          <div class="project-step-section-title">
+            <span>1. Paper First (Derivations)</span>
+          </div>
+          <div class="project-step-list">${paperListHTML}</div>
+        </div>
+        
+        <div class="project-step-section">
+          <div class="project-step-section-title">
+            <span>2. Build Code (Implementation)</span>
+            ${!isPaperDone ? '<span class="lock-note">🛡️ Complete paper steps first</span>' : ''}
+          </div>
+          <div class="project-step-list">${buildListHTML}</div>
+        </div>
+        
+        <div class="project-step-section">
+          <div class="project-step-section-title">
+            <span>3. Verification (Done Check)</span>
+            ${!isPaperDone ? '<span class="lock-note">🛡️ Complete paper steps first</span>' : ''}
+          </div>
+          <div class="project-step-list">${doneListHTML}</div>
+        </div>
+      </div>
+    `;
+  };
+  
+  window.currentOpenProjectID = pr.id;
+  window.updateProjectModalView = renderProjectContent;
+  renderProjectContent();
+  openModal("lessonModal");
+}
+
+function toggleProjectStep(stepId, prId) {
+  const checked = !on(stepId);
+  
+  if (checked && stepId.startsWith("pd_")) {
+    const p = roadmap.find(ph => (ph.projects || []).some(proj => proj.id === prId));
+    const pr = p.projects.find(proj => proj.id === prId);
+    const confirmRecall = confirm(`M1 Recall Check: Can you explain "${pr.ttl}" from memory with no notes?\n\nClick OK if you can explain it. Click Cancel to restudy first.`);
+    if (!confirmRecall) return;
+  }
+  
+  state.checks[stepId] = checked;
+  
+  if (checked) {
+    markActivity();
+    playSound("click");
+    const p = roadmap.find(ph => (ph.projects || []).some(proj => proj.id === prId));
+    const pr = p.projects.find(proj => proj.id === prId);
+    const paperIDs = (pr.paper || []).map((_, idx) => `pp_${pr.id}_${idx}`);
+    const buildIDs = (pr.build || []).map((_, idx) => `pb_${pr.id}_${idx}`);
+    const doneIDs = (pr.done || []).map((_, idx) => `pd_${pr.id}_${idx}`);
+    const isProjectComplete = [...paperIDs, ...buildIDs, ...doneIDs].every(id => state.checks[id]);
+    if (isProjectComplete) {
+      triggerCelebration(`Project ${pr.ttl} Completed! +50 XP 🏆`);
+    }
+  } else {
+    updateProgress();
+  }
+  
+  save();
+  render();
+  
+  if (window.updateProjectModalView) {
+    window.updateProjectModalView();
+  }
+}
+
+function openGateModal(p, id) {
+  const modal = document.getElementById("lessonModal");
+  document.getElementById("modalTag").textContent = `ZONE GATE`;
+  document.getElementById("modalTitle").textContent = p.gate.title;
+  
+  const gatePassedBefore = p.gate.criteria.every(c => on("gate_" + c.id));
+  
+  let criteriaHTML = p.gate.criteria.map((c, i) => {
+    const critId = "gate_" + c.id;
+    return `
+      <label class="gate-item ${on(critId) ? 'checked' : ''}">
+        <input type="checkbox" ${on(critId) ? 'checked' : ''} onchange="toggleGateStep('${critId}', '${p.id}')">
+        <span>${c.text}</span>
+      </label>
+    `;
+  }).join("");
+  
+  document.getElementById("modalBody").innerHTML = `
+    <p style="font-size:14px; color:var(--text-muted); margin-bottom:16px;">Complete all criteria below to unlock the next Phase zone.</p>
+    <div class="gate-checklist">${criteriaHTML}</div>
+  `;
+  
+  openModal("lessonModal");
+}
+
+function toggleGateStep(critId, phaseId) {
+  const checked = !on(critId);
+  const p = roadmap.find(ph => ph.id === phaseId);
+  const wasPassed = p.gate.criteria.every(c => on("gate_" + c.id));
+  
+  state.checks[critId] = checked;
+  
+  if (checked) {
+    markActivity();
+    playSound("click");
+    const nowPassed = p.gate.criteria.every(c => on("gate_" + c.id));
+    if (!wasPassed && nowPassed) {
+      triggerCelebration(`Zone Unlocked! Phase ${roadmap.indexOf(p) + 1} is now accessible! 🗝️`);
+    }
+  } else {
+    updateProgress();
+  }
+  
+  save();
+  render();
+  openGateModal(p, "gate_" + phaseId);
+}
+
+/* ================= Focus Mode Script ================= */
+function enterFocusMode(topicId) {
+  const p = roadmap.find(ph => (ph.groups || []).some(g => g.items.some(t => "t_" + t.id === topicId)));
+  const group = p.groups.find(g => g.items.some(t => "t_" + t.id === topicId));
+  const topic = group.items.find(t => "t_" + t.id === topicId);
+  
+  document.getElementById("focusTag").textContent = `FOCUS MODE: TOPIC ${topic.id}`;
+  document.getElementById("focusTitle").textContent = topic.ttl;
+  document.getElementById("focusLearnText").textContent = topic.learn;
+  document.getElementById("focusSkipText").textContent = topic.skip;
+  
+  document.getElementById("focusYTBtn").onclick = () => window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(topic.search)}`, '_blank');
+  document.getElementById("focusGoogleBtn").onclick = () => window.open(`https://www.google.com/search?q=${encodeURIComponent(topic.search)}`, '_blank');
+  
+  const completeBtn = document.getElementById("focusCompleteBtn");
+  
+  if (state.checks[topicId]) {
+    completeBtn.textContent = "Mark Incomplete";
+    completeBtn.className = "btn-chunky btn-gray";
+    completeBtn.onclick = () => {
+      toggle(topicId, false);
+      closeFocusMode();
+    };
+  } else {
+    completeBtn.textContent = "I've Learned This! 🔥";
+    completeBtn.className = "btn-chunky btn-green";
+    completeBtn.onclick = () => {
+      if (topic.keystone) {
+        const confirmRecall = confirm(`M1 Recall Check: Can you explain "${topic.ttl}" from memory with no notes?\n\nClick OK if you can explain it. Click Cancel to restudy first.`);
+        if (!confirmRecall) return;
+      }
+      toggle(topicId, true);
+      closeFocusMode();
+      triggerCelebration();
+    };
+  }
+  
+  document.getElementById("focusOverlay").classList.add("open");
+}
+
+function closeFocusMode() {
+  document.getElementById("focusOverlay").classList.remove("open");
+}
+
+/* ================= HUD Widgets Render ================= */
+function renderHUDWidgets() {
+  if (!activeProfile) return;
+  const xp = getXP();
+  const info = getLevelInfo(xp);
+  
+  const avatarSVG = getProfileAvatarSVG(activeProfile.name, activeProfile.avatarColor, 28);
+  
+  const profileHUDHTML = `
+    <div class="hud-profile-info" style="margin-right:8px;">
+      <div style="flex-shrink:0;">${avatarSVG}</div>
+      <span class="hud-profile-name" style="font-size:12px;">${activeProfile.name}</span>
+    </div>
+    <button class="btn-chunky btn-gray btn-sm" onclick="logoutProfile()" style="padding: 4px 8px; font-size:9px; box-shadow: 0 2px 0 var(--border-color); margin-right:12px;" title="Switch Profile">
+      Switch
+    </button>
+  `;
+  
+  const widgetsHTML = `
+    ${profileHUDHTML}
+    <div class="hud-widget streak" onclick="openCalendarModalView()" title="Current Streak: ${state.currentStreak} Days">
+      ${SVG_ICONS.flame}
+      <span>${state.currentStreak}</span>
+    </div>
+    <div class="hud-widget xp" title="Total XP: ${xp}">
+      ${SVG_ICONS.star}
+      <span>${xp} XP</span>
+    </div>
+    <div class="hud-widget level" title="Level ${info.level} (${info.rank})">
+      <span>Lvl ${info.level}</span>
+    </div>
+    <div class="hud-widget freeze" onclick="openCalendarModalView()" title="Streak Freezes Available: ${state.freezes}/2">
+      ${SVG_ICONS.shield}
+      <span>${state.freezes}</span>
+    </div>
+  `;
+  
+  document.getElementById("desktopHUDWidgets").innerHTML = widgetsHTML;
+  document.getElementById("mobileHUDWidgets").innerHTML = widgetsHTML;
+  
+  const statsWidgets = document.getElementById("statsHUDWidgets");
+  if (statsWidgets) {
+    statsWidgets.innerHTML = `
+      <div class="hud-widget streak" onclick="openCalendarModalView()" title="Current Streak: ${state.currentStreak} Days">
+        ${SVG_ICONS.flame}
+        <span>${state.currentStreak}</span>
+      </div>
+      <div class="hud-widget xp" title="Total XP: ${xp}">
+        ${SVG_ICONS.star}
+        <span>${xp} XP</span>
+      </div>
+      <div class="hud-widget level" title="Level ${info.level} (${info.rank})">
+        <span>Lvl ${info.level}</span>
+      </div>
+      <div class="hud-widget freeze" onclick="openCalendarModalView()" title="Streak Freezes Available: ${state.freezes}/2">
+        ${SVG_ICONS.shield}
+        <span>${state.freezes}</span>
+      </div>
+    `;
+  }
+}
+
+/* ================= Streak Calendar Logic ================= */
+let calendarYear = new Date().getFullYear();
+let calendarMonth = new Date().getMonth();
+
+function changeCalendarMonth(offset) {
+  calendarMonth += offset;
+  if (calendarMonth < 0) {
+    calendarMonth = 11;
+    calendarYear--;
+  } else if (calendarMonth > 11) {
+    calendarMonth = 0;
+    calendarYear++;
+  }
+  renderCalendars();
+}
+
+function renderCalendars() {
+  const generateGridHTML = () => {
+    const dates = new Set(state.activityDates || []);
+    const consumed = new Set(state.consumedFreezeDates || []);
+    const todayStr = getLocalDateString();
+    
+    const firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
+    const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    
+    let cellsHTML = "";
+    
+    const calendarHeaderHTML = `
+      <div class="calendar-header">
+        <button class="calendar-nav-btn" onclick="changeCalendarMonth(-1)">&larr;</button>
+        <span class="calendar-month-title">${monthNames[calendarMonth]} ${calendarYear}</span>
+        <button class="calendar-nav-btn" onclick="changeCalendarMonth(1)">&rarr;</button>
+      </div>
+    `;
+    
+    const dayNames = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+    const dayNamesHTML = dayNames.map(name => `<div class="calendar-day-name">${name}</div>`).join("");
+    
+    for (let i = 0; i < firstDay; i++) {
+      cellsHTML += `<div class="calendar-cell"></div>`;
+    }
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+      const cellDate = new Date(calendarYear, calendarMonth, day);
+      const cellDateStr = getLocalDateString(cellDate);
+      
+      let classes = "calendar-cell";
+      if (dates.has(cellDateStr)) classes += " active-day";
+      else if (consumed.has(cellDateStr)) classes += " frozen-day";
+      if (cellDateStr === todayStr) classes += " today";
+      
+      cellsHTML += `<div class="${classes}">${day}</div>`;
+    }
+    
+    const statsHTML = `
+      <div class="calendar-stats">
+        <div class="calendar-stat-item">
+          <span>Current Streak:</span>
+          <strong>${state.currentStreak} Days 🔥</strong>
+        </div>
+        <div class="calendar-stat-item">
+          <span>Longest Streak:</span>
+          <strong>${state.maxStreak} Days 👑</strong>
+        </div>
+        <div class="calendar-stat-item">
+          <span>Freezes Left:</span>
+          <strong>${state.freezes}/2 🛡️</strong>
+        </div>
+      </div>
+    `;
+    
+    return `
+      ${calendarHeaderHTML}
+      <div class="calendar-grid">
+        ${dayNamesHTML}
+        ${cellsHTML}
+      </div>
+      ${statsHTML}
+    `;
+  };
+  
+  const gridHTML = generateGridHTML();
+  document.getElementById("desktopCalendarWidget").innerHTML = gridHTML;
+  
+  const statsCalendar = document.getElementById("statsCalendarWidget");
+  if (statsCalendar) {
+    statsCalendar.innerHTML = gridHTML;
+  }
+  
+  const modalCalendar = document.getElementById("modalCalendarContainer");
+  if (modalCalendar) {
+    modalCalendar.innerHTML = gridHTML;
+  }
+}
+
+function openCalendarModalView() {
+  renderCalendars();
+  openModal("calendarModal");
+}
+
+/* ================= Trophy Case Badges Render ================= */
+function renderTrophyCase() {
+  const trophyContainer = document.getElementById("statsTrophyCase");
+  if (!trophyContainer) return;
+  
+  trophyContainer.innerHTML = "";
+  
+  ACHIEVEMENTS_DEF.forEach(ach => {
+    const isUnlocked = (state.achievements || []).includes(ach.id);
+    const card = document.createElement("div");
+    card.className = `trophy-card ${isUnlocked ? 'unlocked' : ''}`;
+    card.innerHTML = `
+      <div class="trophy-icon">${ach.icon}</div>
+      <div class="trophy-title">${ach.title}</div>
+      <div class="trophy-desc">${ach.desc}</div>
+    `;
+    trophyContainer.appendChild(card);
+  });
+}
+
+/* ================= Level-Up & Badge Celebrations ================= */
+function showLevelUpModal(prevLevel, currentLevel, rank, freezeRewarded) {
+  document.getElementById("celebrateTitle").textContent = "LEVEL UP!";
+  document.getElementById("celebrateSubtitle").innerHTML = `You've advanced to <strong>Level ${currentLevel}</strong>!<br><span style="font-size:13px; opacity:0.85;">Rank: ${rank}</span>`;
+  document.getElementById("celebrateXPReward").textContent = `Level ${currentLevel}`;
+  document.getElementById("celebrateXPReward").nextElementSibling.textContent = "Current Level";
+  
+  const freezeBadge = document.getElementById("celebrateFreezeBadge");
+  if (freezeRewarded) {
+    freezeBadge.style.display = "flex";
+  } else {
+    freezeBadge.style.display = "none";
+  }
+  
+  document.getElementById("celebrateMascotContainer").innerHTML = SVG_MASCOT.celebrating(100, 100);
+  openModal("celebrateOverlay");
+  playSound("fanfare");
+  spawnConfetti();
+  requestAnimationFrame(updateParticles);
+}
+
+function showAchievementModal(ach) {
+  document.getElementById("celebrateTitle").textContent = "ACHIEVEMENT!";
+  document.getElementById("celebrateSubtitle").innerHTML = `Unlocked: <strong>${ach.title}</strong><br><span style="font-size:13px; opacity:0.85;">${ach.desc}</span>`;
+  document.getElementById("celebrateXPReward").textContent = ach.icon;
+  document.getElementById("celebrateXPReward").nextElementSibling.textContent = "Badge Earned";
+  document.getElementById("celebrateFreezeBadge").style.display = "none";
+  
+  document.getElementById("celebrateMascotContainer").innerHTML = SVG_MASCOT.celebrating(100, 100);
+  openModal("celebrateOverlay");
+  playSound("fanfare");
+  spawnConfetti();
+  requestAnimationFrame(updateParticles);
+}
+
+function closeCelebration() {
+  closeModal("celebrateOverlay");
+}
+
+/* ================= Pomodoro Timer Logic ================= */
+let pomoInterval = null;
+let pomoTimeRemaining = 25 * 60;
+let pomoRunning = false;
+let pomoMode = "focus"; // "focus" or "break"
+
+function updatePomoDisplay() {
+  const m = String(Math.floor(pomoTimeRemaining / 60)).padStart(2, "0");
+  const s = String(pomoTimeRemaining % 60).padStart(2, "0");
+  
+  document.getElementById("pomoTimerText").textContent = `${m}:${s}`;
+  
+  const max = (pomoMode === "focus" ? 25 : 5) * 60;
+  const offset = 283 - (pomoTimeRemaining / max) * 283;
+  document.getElementById("pomoProgressCircle").style.strokeDashoffset = offset;
+  
+  const label = document.getElementById("pomoTimerLabel");
+  const progressRing = document.getElementById("pomoProgressCircle");
+  
+  if (pomoMode === "focus") {
+    label.textContent = "FOCUS BLOCK";
+    progressRing.style.stroke = "var(--color-orange)";
+  } else {
+    label.textContent = "REST BREAK";
+    progressRing.style.stroke = "var(--color-green)";
+  }
+}
+
+function togglePomo() {
+  const btn = document.getElementById("pomoStartBtn");
+  
+  if (pomoRunning) {
+    clearInterval(pomoInterval);
+    pomoRunning = false;
+    btn.textContent = "Resume Focus";
+    btn.className = "btn-chunky btn-green";
+  } else {
+    pomoRunning = true;
+    btn.textContent = "Pause Timer";
+    btn.className = "btn-chunky btn-gray";
+    
+    pomoInterval = setInterval(() => {
+      pomoTimeRemaining--;
+      
+      if (pomoTimeRemaining <= 0) {
+        clearInterval(pomoInterval);
+        pomoRunning = false;
+        
+        if (pomoMode === "focus") {
+          pomoMode = "break";
+          pomoTimeRemaining = 5 * 60;
+          triggerCelebration("Focus block completed! Take a 5-minute break.");
+          playSound("fanfare");
+        } else {
+          pomoMode = "focus";
+          pomoTimeRemaining = 25 * 60;
+          triggerCelebration("Break is over! Time to focus again.");
+          playSound("fanfare");
+        }
+        
+        btn.textContent = "Start Focus";
+        btn.className = "btn-chunky btn-green";
+      }
+      updatePomoDisplay();
+    }, 1000);
+  }
+}
+
+function resetPomo() {
+  clearInterval(pomoInterval);
+  pomoRunning = false;
+  pomoMode = "focus";
+  pomoTimeRemaining = 25 * 60;
+  document.getElementById("pomoStartBtn").textContent = "Start Focus";
+  document.getElementById("pomoStartBtn").className = "btn-chunky btn-green";
+  updatePomoDisplay();
+}
+
+/* ================= Brain Dump Notepad Autosaves ================= */
+const dumpTextarea = document.getElementById("dumpTextarea");
+const dumpSaveStatus = document.getElementById("dumpSaveStatus");
+
+dumpTextarea.value = state.dump || "";
+let saveTimeout = null;
+
+dumpTextarea.addEventListener("input", () => {
+  state.dump = dumpTextarea.value;
+  save();
+  
+  dumpSaveStatus.classList.add("visible");
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(() => {
+    dumpSaveStatus.classList.remove("visible");
+  }, 1500);
+});
+
+function clearDump() {
+  if (confirm("Clear all text from your Brain Dump notepad?")) {
+    dumpTextarea.value = "";
+    state.dump = "";
+    save();
+  }
+}
+
+/* ================= Mascot Animation State ================= */
+function renderMascots() {
+  const currentTask = getCurrentTask();
+  let mood = "happy";
+  
+  if (pomoRunning && pomoMode === "focus") {
+    mood = "studying";
+  } else if (pomoRunning && pomoMode === "break") {
+    mood = "sleeping";
+  } else if (!currentTask) {
+    mood = "celebrating";
+  }
+  
+  const mascotHTML = SVG_MASCOT[mood](40, 40);
+  document.getElementById("sidebarMascotContainer").innerHTML = mascotHTML;
+  document.getElementById("mobileMascotContainer").innerHTML = mascotHTML;
+}
+
+setInterval(renderMascots, 5000);
+
+/* ================= Backup & Restore Utilities ================= */
+function exportBackup() {
+  const str = JSON.stringify(state, null, 2);
+  const blob = new Blob([str], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `zeroToModernAI_backup_${getLocalDateString()}.json`;
+  a.click();
+}
+
+function triggerImport() {
+  document.getElementById("importFileInput").click();
+}
+
+function importBackup(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const parsed = JSON.parse(reader.result);
+      if (parsed && typeof parsed === "object") {
+        state = {
+          checks: parsed.checks || {},
+          dump: parsed.dump || "",
+          activityDates: parsed.activityDates || [],
+          consumedFreezeDates: parsed.consumedFreezeDates || [],
+          freezes: parsed.freezes !== undefined ? parsed.freezes : 1,
+          currentStreak: parsed.currentStreak !== undefined ? parsed.currentStreak : 0,
+          maxStreak: parsed.maxStreak !== undefined ? parsed.maxStreak : 0,
+          lastSeenLevel: parsed.lastSeenLevel !== undefined ? parsed.lastSeenLevel : 1,
+          achievements: parsed.achievements || []
+        };
+        save();
+        dumpTextarea.value = state.dump;
+        updateProgress();
+        render();
+        triggerCelebration("Backup successfully imported!");
+      }
+    } catch (e) {
+      alert("Invalid backup JSON file.");
+    }
+  };
+  reader.readAsText(file);
+}
+
+function resetAllData() {
+  if (confirm("WARNING: Are you sure you want to reset all progress, streak logs, achievements, and notepad data? This cannot be undone.")) {
+    state = {
+      checks: {},
+      dump: "",
+      activityDates: [],
+      consumedFreezeDates: [],
+      freezes: 1,
+      currentStreak: 0,
+      maxStreak: 0,
+      lastSeenLevel: 1,
+      achievements: []
+    };
+    save();
+    dumpTextarea.value = "";
+    updateProgress();
+    render();
+    triggerCelebration("All progression has been reset!");
+  }
+}
+
+/* ================= Audio & Theme Toggles ================= */
+function toggleMute() {
+  audioMuted = !audioMuted;
+  const label = audioMuted ? "Off 🔇" : "On 🔊";
+  document.getElementById("soundBtn").textContent = label;
+  document.getElementById("soundBtnSettings").textContent = label;
+  
+  if (!audioMuted) {
+    initAudio();
+    playSound("click");
+  }
+}
+
+function getProfileThemeKey() {
+  return activeProfile ? `zeroToModernAI_theme_${activeProfile.id}` : "zeroToModernAI_theme_temp";
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute("data-theme");
+  const next = current === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  if (activeProfile) {
+    localStorage.setItem(getProfileThemeKey(), next);
+  }
+  
+  const label = next === "dark" ? "On ☽" : "Off ☼";
+  document.getElementById("themeBtn").textContent = label;
+  document.getElementById("themeBtnSettings").textContent = label;
+  
+  playSound("click");
+}
+
+function initTheme() {
+  const key = getProfileThemeKey();
+  const savedTheme = localStorage.getItem(key) || "light";
+  document.documentElement.setAttribute("data-theme", savedTheme);
+  const label = savedTheme === "dark" ? "On ☽" : "Off ☼";
+  document.getElementById("themeBtn").textContent = label;
+  document.getElementById("themeBtnSettings").textContent = label;
+}
+
+/* ================= Navigation Tabs controller ================= */
+function setTab(tabId) {
+  document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
+  document.getElementById(`tab-content-${tabId}`).classList.remove("hidden");
+  
+  document.querySelectorAll(".nav-item").forEach(el => el.classList.remove("active"));
+  document.querySelectorAll(`.nav-item[data-tab="${tabId}"]`).forEach(el => el.classList.add("active"));
+  
+  playSound("click");
+  render();
+}
+
+/* ================= Toast Notification ================= */
+let toastT = null;
+function showToast(msg) {
+  let toast = document.getElementById("toast-notif");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "toast-notif";
+    toast.style.cssText = "position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(100px);z-index:300;background:var(--bg-main);border:2px solid var(--border-color);color:var(--text-main);font-weight:800;font-size:14px;padding:12px 24px;border-radius:999px;box-shadow:0 8px 16px var(--shadow-color);transition:transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);pointer-events:none;";
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.transform = "translateX(-50%) translateY(0)";
+  clearTimeout(toastT);
+  toastT = setTimeout(() => {
+    toast.style.transform = "translateX(-50%) translateY(100px)";
+  }, 2200);
+}
+
+/* ================= Sidebar Courses Render ================= */
+function renderSidebarCourses() {
+  const container = document.getElementById("sidebarCourseList");
+  if (!container) return;
+  
+  let html = "";
+  roadmap.forEach((p, idx) => {
+    const isUnlocked = unlocked(idx);
+    const progress = phasePct(p);
+    const isParked = (idx >= 2);
+    
+    // Draw SVG circle progress
+    const radius = 12;
+    const circ = 2 * Math.PI * radius;
+    const strokeDash = circ - (progress / 100) * circ;
+    
+    const parkedClass = isParked ? "parked" : "";
+    const parkedBadge = isParked ? " (Parked)" : "";
+    
+    html += `
+      <div class="chapter-item ${parkedClass}" onclick="scrollToPhase(${idx})">
+        <div class="chapter-title-box">
+          <div class="chapter-title-num">Course ${idx}</div>
+          <div class="chapter-title-name">${p.name.replace(/^Phase \d+ - /, "")}${parkedBadge}</div>
+        </div>
+        <div class="chapter-progress">
+          <svg class="circular-chart" viewBox="0 0 32 32">
+            <circle class="circle-bg" cx="16" cy="16" r="${radius}" />
+            <circle class="circle" cx="16" cy="16" r="${radius}"
+                    stroke-dasharray="${circ}"
+                    stroke-dashoffset="${strokeDash}" />
+          </svg>
+          <span class="chapter-pct">${progress}%</span>
+        </div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+}
+
+function scrollToPhase(idx) {
+  setTab("roadmap");
+  const el = document.getElementById("phase-banner-" + idx);
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+/* ================= Render & Refresh Pipeline ================= */
+function render() {
+  renderLearningPath();
+  renderCurrentQuest();
+  renderHUDWidgets();
+  renderCalendars();
+  renderTrophyCase();
+  renderMascots();
+  renderSidebarCourses();
+}
+
+/* ================= Boot / Initialization ================= */
+window.addEventListener("DOMContentLoaded", () => {
+  // Check and migrate legacy data first
+  checkAndMigrateLegacyData();
+  
+  // Try loading active profile
+  const activeId = localStorage.getItem(ACTIVE_PROFILE_ID_KEY);
+  loadProfilesList();
+  
+  if (activeId && profiles.some(p => p.id === activeId)) {
+    const active = profiles.find(p => p.id === activeId);
+    loginAs(active);
+  } else {
+    logoutProfile();
+  }
+  
+  resetPomo();
+  
+  window.addEventListener("keydown", e => {
+    if (e.key === "Escape") {
+      closeModal("lessonModal");
+      closeModal("calendarModal");
+      closeFocusMode();
+      closePasswordModal();
+    }
+  });
+});
+</script>
+</body>
+</html>
