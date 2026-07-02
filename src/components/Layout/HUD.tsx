@@ -5,10 +5,12 @@ import { SVG_ICONS, getProfileAvatarSVG } from '../Common/Assets';
 
 interface HUDProps {
   onTabChange?: (tab: string) => void;
+  onLevelClick?: () => void;
+  onBuyFreezeClick?: () => void;
 }
 
-export const HUD: React.FC<HUDProps> = ({ onTabChange }) => {
-  const { profile, stats, signOut, updateStats } = useAuth();
+export const HUD: React.FC<HUDProps> = ({ onTabChange, onLevelClick, onBuyFreezeClick }) => {
+  const { profile, stats, signOut } = useAuth();
   const { playSound } = useAudio();
 
   const handleSignOut = () => {
@@ -21,54 +23,14 @@ export const HUD: React.FC<HUDProps> = ({ onTabChange }) => {
     if (onTabChange) onTabChange('stats');
   };
 
-  const getRankName = (level: number) => {
-    if (level >= 8) return "AI Architect";
-    if (level >= 5) return "ML Engineer";
-    if (level >= 3) return "Apprentice";
-    return "Initiate";
-  };
-
   const handleLevelClick = () => {
-    if (!stats) return;
     playSound('click');
-    alert(`Level Progress:\n\nCurrent Level: ${stats.level}\nRank: ${getRankName(stats.level)}\n\nGain XP by completing topics (+10 XP) and projects (+10 to +20 XP) to rank up!`);
+    if (onLevelClick) onLevelClick();
   };
 
-  const handleBuyFreeze = async () => {
-    if (!stats) return;
+  const handleBuyFreeze = () => {
     playSound('click');
-    
-    if (stats.freezes >= 2) {
-      playSound('locked');
-      alert("Maximum 2 Streak Freezes allowed. You already have 2!");
-      return;
-    }
-    
-    if (stats.xp < 50) {
-      playSound('locked');
-      alert(`Need 50 XP to buy a Streak Freeze.\n(Current: ${stats.xp} XP, Cost: 50 XP)`);
-      return;
-    }
-    
-    const confirmBuy = confirm(`Buy a Streak Freeze for 50 XP?\n\nThis will protect your streak if you miss a study day.\n\nCurrent freezes: ${stats.freezes}/2\nCurrent XP: ${stats.xp} XP`);
-    if (confirmBuy) {
-      try {
-        await updateStats({
-          xp: stats.xp - 50,
-          freezes: stats.freezes + 1
-        });
-        playSound('success');
-        
-        // Dynamically import confetti to avoid chunk size overhead
-        const { triggerConfetti } = await import('../../components/Common/Confetti');
-        triggerConfetti();
-        
-        alert("Purchase successful! Streak Freeze added. 🛡️");
-      } catch (e) {
-        console.error(e);
-        alert("Failed to buy Streak Freeze.");
-      }
-    }
+    if (onBuyFreezeClick) onBuyFreezeClick();
   };
 
   if (!profile || !stats) return null;

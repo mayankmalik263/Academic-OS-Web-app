@@ -26,6 +26,7 @@ import { ProjectModal } from './components/Modals/ProjectModal';
 import { GateModal } from './components/Modals/GateModal';
 import { LevelUpModal } from './components/Modals/LevelUpModal';
 import { FocusOverlay } from './components/Modals/FocusOverlay';
+import { StatsModal } from './components/Modals/StatsModal';
 import { Toast } from './components/Common/Toast';
 import { SVG_MASCOT, ACHIEVEMENTS_DEF } from './components/Common/Assets';
 
@@ -71,6 +72,11 @@ const AppContent: React.FC = () => {
   const [celebrationOpen, setCelebrationOpen] = useState(false);
   const [celebrationType, setCelebrationType] = useState<'level' | 'achievement' | null>(null);
   const [celebrationData, setCelebrationData] = useState<any>(null);
+
+  // Stats Modal (custom alerts / confirms for stats widgets)
+  const [statsModalOpen, setStatsModalOpen] = useState(false);
+  const [statsModalType, setStatsModalType] = useState<'level' | 'freeze_confirm' | 'freeze_error' | 'freeze_success' | null>(null);
+  const [statsModalData, setStatsModalData] = useState<any>(null);
 
   // Toast
   const [toastMsg, setToastMsg] = useState('');
@@ -358,6 +364,69 @@ const AppContent: React.FC = () => {
     showToast(msg);
   };
 
+  const handleLevelClick = () => {
+    if (!stats) return;
+    setStatsModalType('level');
+    setStatsModalData({
+      level: stats.level,
+      rank: getRankName(stats.level),
+      xp: stats.xp
+    });
+    setStatsModalOpen(true);
+  };
+
+  const handleBuyFreezeClick = () => {
+    if (!stats) return;
+    
+    if (stats.freezes >= 2) {
+      playSound('locked');
+      setStatsModalType('freeze_error');
+      setStatsModalData({
+        errorMessage: "Maximum 2 Streak Freezes allowed. You already have 2!"
+      });
+      setStatsModalOpen(true);
+      return;
+    }
+    
+    if (stats.xp < 50) {
+      playSound('locked');
+      setStatsModalType('freeze_error');
+      setStatsModalData({
+        errorMessage: `Need 50 XP to buy a Streak Freeze.\n(Current: ${stats.xp} XP, Cost: 50 XP)`
+      });
+      setStatsModalOpen(true);
+      return;
+    }
+
+    setStatsModalType('freeze_confirm');
+    setStatsModalData({
+      freezes: stats.freezes,
+      xp: stats.xp,
+      onConfirm: async () => {
+        try {
+          await updateStats({
+            xp: stats.xp - 50,
+            freezes: stats.freezes + 1
+          });
+          playSound('success');
+          triggerConfetti();
+          
+          setTimeout(() => {
+            setStatsModalType('freeze_success');
+            setStatsModalData({
+              freezes: stats.freezes + 1
+            });
+            setStatsModalOpen(true);
+          }, 300);
+        } catch (e) {
+          console.error(e);
+          alert("Purchase failed.");
+        }
+      }
+    });
+    setStatsModalOpen(true);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--bg-page)] text-[var(--text-main)] font-black gap-4">
@@ -388,7 +457,11 @@ const AppContent: React.FC = () => {
           {SVG_MASCOT.happy(36, 36)}
           <h1 className="brand-title text-sm">ZERO TO AI</h1>
         </div>
-        <HUD onTabChange={setActiveTab} />
+        <HUD 
+          onTabChange={setActiveTab} 
+          onLevelClick={handleLevelClick}
+          onBuyFreezeClick={handleBuyFreezeClick}
+        />
       </header>
 
       {/* Main Content Column */}
@@ -470,7 +543,11 @@ const AppContent: React.FC = () => {
 
       {/* Desktop Right Sidebar Widgets */}
       <aside className="right-sidebar">
-        <HUD onTabChange={setActiveTab} />
+        <HUD 
+          onTabChange={setActiveTab} 
+          onLevelClick={handleLevelClick}
+          onBuyFreezeClick={handleBuyFreezeClick}
+        />
         
         {/* Right Quest Card */}
         <div className={activeTab === 'roadmap' ? '' : 'hidden'}>
@@ -578,6 +655,13 @@ const AppContent: React.FC = () => {
         onClose={() => setCelebrationOpen(false)}
         type={celebrationType}
         data={celebrationData}
+      />
+
+      <StatsModal
+        isOpen={statsModalOpen}
+        onClose={() => setStatsModalOpen(false)}
+        type={statsModalType}
+        data={statsModalData}
       />
 
       <Toast message={toastMsg} visible={toastVisible} />
