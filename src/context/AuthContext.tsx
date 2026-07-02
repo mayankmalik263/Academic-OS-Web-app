@@ -87,7 +87,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             id: currentUser.id,
             display_name: currentUser.user_metadata?.display_name || currentUser.email?.split('@')[0] || 'Explorer',
             avatar_seed: '#05C46B',
-            theme: 'light'
+            theme: 'dark'
           })
           .select()
           .single();

@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     display_name TEXT NOT NULL DEFAULT 'Explorer',
     avatar_seed TEXT NOT NULL DEFAULT '#05C46B',
-    theme TEXT NOT NULL DEFAULT 'light',
+    theme TEXT NOT NULL DEFAULT 'dark',
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -166,7 +166,7 @@ BEGIN
         new.id,
         COALESCE(new.raw_user_meta_data->>'display_name', 'Explorer'),
         '#05C46B',
-        'light'
+        'dark'
     );
 
     -- Initialize user stats

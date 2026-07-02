@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -8,6 +8,14 @@
     <!-- SEO Meta Tags -->
     <title>Zero to Modern AI — Gamified Command Deck</title>
     <meta name="description" content="A gamified, multi-user learning roadmap and Command Deck for tracking Zero to Modern AI progress, streaks, achievements, and notepad logs." />
+    
+    <!-- Inline script to load theme immediately and avoid light flashes -->
+    <script>
+      (function() {
+        const savedTheme = localStorage.getItem('zeroToModernAI_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+      })();
+    </script>
     
     <!-- Google Fonts: Nunito for Duolingo aesthetics -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
