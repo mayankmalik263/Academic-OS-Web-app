@@ -420,56 +420,14 @@ const AppContent: React.FC = () => {
           </div>
         )}
 
-        {/* Tab Routing */}
-        {activeTab === 'roadmap' && (
-          <div className="flex flex-col gap-6">
-            <div className="commitment-card text-left">
-              <strong>Commitment Zone</strong>
-              Phase 0 & Phase 1 are active. Phases 2 & 3 are parked on purpose — not a backlog! Focus on code-first principles, not the polish.
-            </div>
-            
-            {/* Highlight Active Quest Banner */}
-            <QuestCard
-              onNodeClick={handleNodeClick}
-              onFocusClick={(topicId) => {
-                const phase = roadmap.find(ph => ph.groups.some(g => g.items.some(t => t.id === topicId)));
-                const group = phase?.groups.find(g => g.items.some(t => t.id === topicId));
-                const topic = group?.items.find(t => t.id === topicId);
-                if (topic) {
-                  playSound('click');
-                  setActiveFocusTopic(topic);
-                }
-              }}
-            />
-
-            {/* Learning Path */}
-            <LearningPath onNodeClick={handleNodeClick} />
+        {/* Tab Routing (Persistent Mounting to prevent unmounting reloads and state resets) */}
+        <div className={activeTab === 'roadmap' ? 'flex flex-col gap-6' : 'hidden'}>
+          <div className="commitment-card text-left">
+            <strong>Commitment Zone</strong>
+            Phase 0 & Phase 1 are active. Phases 2 & 3 are parked on purpose — not a backlog! Focus on code-first principles, not the polish.
           </div>
-        )}
-
-        {activeTab === 'meta' && <MetaLearning />}
-
-        {activeTab === 'stats' && <StatsDashboard />}
-
-        {activeTab === 'tools' && (
-          <WorkspaceTools
-            pomoRunning={pomoRunning}
-            setPomoRunning={setPomoRunning}
-            pomoMode={pomoMode}
-            setPomoMode={setPomoMode}
-            onCelebrationTrigger={handleCelebration}
-          />
-        )}
-
-        {activeTab === 'settings' && <SettingsTab />}
-      </main>
-
-      {/* Desktop Right Sidebar Widgets */}
-      <aside className="right-sidebar">
-        <HUD />
-        
-        {/* Right Quest Card */}
-        {activeTab === 'roadmap' && (
+          
+          {/* Highlight Active Quest Banner */}
           <QuestCard
             onNodeClick={handleNodeClick}
             onFocusClick={(topicId) => {
@@ -482,7 +440,53 @@ const AppContent: React.FC = () => {
               }
             }}
           />
-        )}
+
+          {/* Learning Path */}
+          <LearningPath onNodeClick={handleNodeClick} />
+        </div>
+
+        <div className={activeTab === 'meta' ? '' : 'hidden'}>
+          <MetaLearning />
+        </div>
+
+        <div className={activeTab === 'stats' ? '' : 'hidden'}>
+          <StatsDashboard />
+        </div>
+
+        <div className={activeTab === 'tools' ? '' : 'hidden'}>
+          <WorkspaceTools
+            pomoRunning={pomoRunning}
+            setPomoRunning={setPomoRunning}
+            pomoMode={pomoMode}
+            setPomoMode={setPomoMode}
+            onCelebrationTrigger={handleCelebration}
+          />
+        </div>
+
+        <div className={activeTab === 'settings' ? '' : 'hidden'}>
+          <SettingsTab />
+        </div>
+      </main>
+
+      {/* Desktop Right Sidebar Widgets */}
+      <aside className="right-sidebar">
+        <HUD />
+        
+        {/* Right Quest Card */}
+        <div className={activeTab === 'roadmap' ? '' : 'hidden'}>
+          <QuestCard
+            onNodeClick={handleNodeClick}
+            onFocusClick={(topicId) => {
+              const phase = roadmap.find(ph => ph.groups.some(g => g.items.some(t => t.id === topicId)));
+              const group = phase?.groups.find(g => g.items.some(t => t.id === topicId));
+              const topic = group?.items.find(t => t.id === topicId);
+              if (topic) {
+                playSound('click');
+                setActiveFocusTopic(topic);
+              }
+            }}
+          />
+        </div>
 
         {/* Inline calendar */}
         <StatsDashboard />
@@ -491,35 +495,35 @@ const AppContent: React.FC = () => {
       {/* Mobile bottom navigation bar */}
       <nav className="mobile-nav-bar">
         <button
-          onClick={() => handleTabChangeMobile('roadmap')}
+          onClick={() => { playSound('click'); setActiveTab('roadmap'); }}
           className={`nav-item ${activeTab === 'roadmap' ? 'active' : ''}`}
         >
           <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
           Path
         </button>
         <button
-          onClick={() => handleTabChangeMobile('meta')}
+          onClick={() => { playSound('click'); setActiveTab('meta'); }}
           className={`nav-item ${activeTab === 'meta' ? 'active' : ''}`}
         >
           <svg viewBox="0 0 24 24"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3z M5.47 18.6L12 22l6.53-3.4L12 15.2L5.47 18.6z"/></svg>
           Meta
         </button>
         <button
-          onClick={() => handleTabChangeMobile('stats')}
+          onClick={() => { playSound('click'); setActiveTab('stats'); }}
           className={`nav-item ${activeTab === 'stats' ? 'active' : ''}`}
         >
           <svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
           Stats
         </button>
         <button
-          onClick={() => handleTabChangeMobile('tools')}
+          onClick={() => { playSound('click'); setActiveTab('tools'); }}
           className={`nav-item ${activeTab === 'tools' ? 'active' : ''}`}
         >
           <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/><path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
           Tools
         </button>
         <button
-          onClick={() => handleTabChangeMobile('settings')}
+          onClick={() => { playSound('click'); setActiveTab('settings'); }}
           className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
         >
           <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
@@ -581,11 +585,6 @@ const AppContent: React.FC = () => {
   );
 };
 
-const handleTabChangeMobile = (tabId: string) => {
-  // Mobile tab helper
-  const el = document.querySelector(`.mobile-nav-bar button[data-tab="${tabId}"]`);
-  if (el) (el as HTMLElement).click();
-};
 
 export const App: React.FC = () => {
   return (

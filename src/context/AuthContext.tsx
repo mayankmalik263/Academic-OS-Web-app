@@ -60,14 +60,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      // 1. Fetch Profile
-      const { data: profileData, error: profileErr } = await supabase
-        .from('profiles')
-        .select('*')
-        .single();
-      
-      // Fallback if trigger hasn't finished or failed
-      if (profileErr && profileErr.code === 'PGRST116') {
+      // Fetch all tables in parallel to optimize load times
+      const [
+        profileRes,
+        statsRes,
+        dumpRes,
+        progressRes,
+        activityRes,
+        freezeRes,
+        achievementsRes
+      ] = await Promise.all([
+        supabase.from('profiles').select('*').single(),
+        supabase.from('stats').select('*').single(),
+        supabase.from('brain_dump').select('*').single(),
+        supabase.from('progress').select('check_id, state'),
+        supabase.from('activity').select('activity_date'),
+        supabase.from('consumed_freezes').select('freeze_date'),
+        supabase.from('achievements').select('achievement_id')
+      ]);
+
+      // 1. Process Profile
+      if (profileRes.error && profileRes.error.code === 'PGRST116') {
         const { data: newProfile } = await supabase
           .from('profiles')
           .insert({
@@ -79,17 +92,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .select()
           .single();
         if (newProfile) setProfile(newProfile);
-      } else if (profileData) {
-        setProfile(profileData);
+      } else if (profileRes.data) {
+        setProfile(profileRes.data);
       }
 
-      // 2. Fetch Stats
-      const { data: statsData, error: statsErr } = await supabase
-        .from('stats')
-        .select('*')
-        .single();
-      
-      if (statsErr && statsErr.code === 'PGRST116') {
+      // 2. Process Stats
+      if (statsRes.error && statsRes.error.code === 'PGRST116') {
         const { data: newStats } = await supabase
           .from('stats')
           .insert({
@@ -103,65 +111,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .select()
           .single();
         if (newStats) setStats(newStats);
-      } else if (statsData) {
-        setStats(statsData);
+      } else if (statsRes.data) {
+        setStats(statsRes.data);
       }
 
-      // 3. Fetch Brain Dump
-      const { data: dumpData, error: dumpErr } = await supabase
-        .from('brain_dump')
-        .select('*')
-        .single();
-      
-      if (dumpErr && dumpErr.code === 'PGRST116') {
+      // 3. Process Brain Dump
+      if (dumpRes.error && dumpRes.error.code === 'PGRST116') {
         const { data: newDump } = await supabase
           .from('brain_dump')
           .insert({ user_id: currentUser.id, content: '' })
           .select()
           .single();
         if (newDump) setBrainDump(newDump.content);
-      } else if (dumpData) {
-        setBrainDump(dumpData.content);
+      } else if (dumpRes.data) {
+        setBrainDump(dumpRes.data.content);
       }
 
-      // 4. Fetch Progress
-      const { data: progressData } = await supabase
-        .from('progress')
-        .select('check_id, state');
-      
-      if (progressData) {
+      // 4. Process Progress Checkmarks
+      if (progressRes.data) {
         const progMap: Record<string, boolean> = {};
-        progressData.forEach((item: any) => {
+        progressRes.data.forEach((item: any) => {
           progMap[item.check_id] = item.state;
         });
         setProgress(progMap);
       }
 
-      // 5. Fetch Activity
-      const { data: activityData } = await supabase
-        .from('activity')
-        .select('activity_date');
-      
-      if (activityData) {
-        setActivityDates(activityData.map((item: any) => item.activity_date));
+      // 5. Process Activity Dates
+      if (activityRes.data) {
+        setActivityDates(activityRes.data.map((item: any) => item.activity_date));
       }
 
-      // 6. Fetch Consumed Freezes
-      const { data: freezeData } = await supabase
-        .from('consumed_freezes')
-        .select('freeze_date');
-      
-      if (freezeData) {
-        setConsumedFreezeDates(freezeData.map((item: any) => item.freeze_date));
+      // 6. Process Consumed Freezes
+      if (freezeRes.data) {
+        setConsumedFreezeDates(freezeRes.data.map((item: any) => item.freeze_date));
       }
 
-      // 7. Fetch Achievements
-      const { data: achievementsData } = await supabase
-        .from('achievements')
-        .select('achievement_id');
-      
-      if (achievementsData) {
-        setAchievements(achievementsData.map((item: any) => item.achievement_id));
+      // 7. Process Achievements
+      if (achievementsRes.data) {
+        setAchievements(achievementsRes.data.map((item: any) => item.achievement_id));
       }
 
     } catch (err) {
