@@ -157,29 +157,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // Check active sessions
+    let isInitialized = false;
+
+    // Check active sessions on initial mount
     supabase.auth.getSession().then(({ data: { session: activeSession } }) => {
       setSession(activeSession);
       setUser(activeSession?.user ?? null);
       if (activeSession?.user) {
-        refreshUserData().then(() => setLoading(false));
+        refreshUserData().then(() => {
+          isInitialized = true;
+          setLoading(false);
+        });
       } else {
+        isInitialized = true;
         setLoading(false);
       }
     });
 
-    // Listen for auth state changes
+    // Listen for auth state changes (runs silently in the background after initial mount)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, newSession) => {
         setSession(newSession);
         setUser(newSession?.user ?? null);
         
         if (newSession?.user) {
-          setLoading(true);
+          // If already initialized, refresh data silently in the background
+          if (!isInitialized) {
+            setLoading(true);
+          }
           await refreshUserData();
-          setLoading(false);
+          if (!isInitialized) {
+            isInitialized = true;
+            setLoading(false);
+          }
         } else {
           clearState();
+          isInitialized = true;
           setLoading(false);
         }
       }
