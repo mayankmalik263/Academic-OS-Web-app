@@ -110,7 +110,7 @@ export const roadmap: RoadmapPhase[] = [
           { id: "1.5", ttl: "Training loop", learn: "predict, loss, gradient, update (w=w-lr*grad), repeat N epochs. Memorize this skeleton.", skip: "Batching/minibatch theory (full-batch fine now).", search: "machine learning training loop from scratch python" },
           { id: "1.6", ttl: "Sigmoid + log loss", learn: "Sigmoid squashes to 0-1 (probability). sigma(z)=1/(1+e^-z). Log/cross-entropy loss for binary.", skip: "Softmax derivation (Phase 2), multi-class for now.", search: "sigmoid function logistic regression cross entropy explained" },
           { id: "1.7", ttl: "Forward vs backward pass", learn: "Forward = compute prediction. Backward = compute gradients via the chain rule.", skip: "Computational-graph autodiff theory.", search: "forward pass backward pass neural network" },
-          { id: "1.8", ttl: "Backprop", keystone: true, learn: "KEYSTONE. Chain rule through layers. 2-layer net: gradient at output to hidden to weights. Do the math once on paper.", skip: "General backprop for arbitrary graphs (PyTorch later).", search: "backpropagation explained from scratch step by step" },
+          { id: "1.8", ttl: "Backprop", keystone: true, learn: "KEYSTONE. Watch 3Blue1Brown ch.3+ch.4 first (~30 min, see Phase resources) for intuition, then chain rule through layers by hand. 2-layer net: gradient at output to hidden to weights. Do the math once on paper.", skip: "General backprop for arbitrary graphs (PyTorch later).", search: "3blue1brown backpropagation calculus deep learning chapter 4" },
           { id: "1.sq_nb", ttl: "Naive Bayes [Optional]", optional: true, learn: "Bayes rule applied to features, 'naive' = assume features independent. Do one tiny text-classification example by hand (spam / not-spam on 3 words). Use it as the cheap baseline: if your LLM classifier can't beat Naive Bayes, something is wrong.", skip: "Don't study the full generative-model theory. Baseline use only.", search: "naive bayes classifier intuition step by step" }
         ]
       }
@@ -170,7 +170,7 @@ export const roadmap: RoadmapPhase[] = [
         id: "1.P3",
         ttl: "2-layer neural net, numpy only",
         keystone: true,
-        learn: "KEYSTONE, make-or-break. Forward + backprop BY HAND in code. Heaviest paper of the roadmap.",
+        learn: "KEYSTONE, make-or-break. Sequence if 1.8 intuition faded: (1) re-watch 3Blue1Brown ch.3+4 (~30 min, Phase resources), (2) do the paper hand-pass below until numbers match, (3) code forward first, print shapes, verify, THEN write backward. If still stuck after that, Karpathy's micrograd video is the deep-dive option (Phase resources) but it's 2.5 hrs, budget it as its own session, don't default to it. Forward + backprop BY HAND in code. Heaviest paper of the roadmap.",
         search: "2 layer neural network from scratch numpy backpropagation",
         paper: [
           "Draw net: 2 in to 3 hidden to 1 out. Label shapes W1(2x3), W2(3x1), biases.",
@@ -229,7 +229,10 @@ export const roadmap: RoadmapPhase[] = [
         { name: "StatQuest - Josh Starmer (ML Playlist)", url: null },
         { name: "CampusX - ML Series in Hinglish", url: null },
         { name: "Scikit-Learn User Guide (Scratch to library)", url: null },
-        { name: "polars - High-Performance DataFrame Library", url: null }
+        { name: "polars - High-Performance DataFrame Library", url: null },
+        { name: "3Blue1Brown - What is backpropagation really doing? (ch.3, ~15 min)", url: "https://www.youtube.com/watch?v=Ilg3gGewQ5U" },
+        { name: "3Blue1Brown - Backpropagation calculus (ch.4, ~15 min)", url: "https://www.youtube.com/watch?v=tIeHLnjs5U8" },
+        { name: "Karpathy - Micrograd: spelled-out intro to NN and backprop (2.5 hr, deep-dive only)", url: "https://www.youtube.com/watch?v=VMj-3S1tku0" }
       ],
       intermediate: [
         { name: "ISLR - James, Witten, Hastie (Ch. 4-9)", url: null },
