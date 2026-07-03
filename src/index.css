@@ -1716,6 +1716,11 @@ a:hover {
     padding: 24px 16px 110px;
     max-width: 100%;
     min-height: 0;
+    /* Backstop: clip any stray horizontal overflow (e.g. the winding learning
+       path) so it can never push the page wider than the viewport and create a
+       blank horizontal-scroll band. overflow-x:clip does not create a scroll
+       container, so it won't interfere with the sticky top bar. */
+    overflow-x: clip;
   }
 
   /* Mobile top bar: brand on row 1, all HUD widgets spread across row 2.
@@ -1749,6 +1754,15 @@ a:hover {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  /* Long node labels (e.g. the gate title) are nowrap on desktop; on a narrow
+     phone that overflows. Let them wrap and cap their width so the text stays
+     fully visible and centered instead of being clipped at the edge. */
+  .node-label {
+    white-space: normal;
+    max-width: 240px;
+    text-align: center;
   }
 
   /* Let tall modals scroll on short phone screens instead of clipping. The auto

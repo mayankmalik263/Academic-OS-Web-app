@@ -13,18 +13,26 @@ interface LearningPathProps {
 // Mobile breakpoint matches the existing 580px media query in index.css.
 // The winding node layout is computed in JS (fixed px columns), so we need the
 // breakpoint in JS to stack the two tracks vertically instead of side-by-side.
-const MOBILE_QUERY = '(max-width: 580px)';
+const MOBILE_MAX_WIDTH = 580;
 
+const isNarrow = () =>
+  typeof window !== 'undefined' && window.innerWidth <= MOBILE_MAX_WIDTH;
+
+// Uses window.innerWidth on every resize rather than only matchMedia('change').
+// This is more robust: if the component ever first mounts at a wider width, a
+// later resize (or the mount-time re-check) still corrects it, so it can never
+// get stuck rendering the wide two-column desktop layout on a phone.
 const useIsMobile = () => {
-  const [isMobile, setIsMobile] = useState(
-    () => typeof window !== 'undefined' && window.matchMedia(MOBILE_QUERY).matches
-  );
+  const [isMobile, setIsMobile] = useState(isNarrow);
   useEffect(() => {
-    const mq = window.matchMedia(MOBILE_QUERY);
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
-    mq.addEventListener('change', handler);
-    setIsMobile(mq.matches);
-    return () => mq.removeEventListener('change', handler);
+    const check = () => setIsMobile(isNarrow());
+    check();
+    window.addEventListener('resize', check);
+    window.addEventListener('orientationchange', check);
+    return () => {
+      window.removeEventListener('resize', check);
+      window.removeEventListener('orientationchange', check);
+    };
   }, []);
   return isMobile;
 };
