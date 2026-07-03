@@ -1750,6 +1750,19 @@ a:hover {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+
+  /* Let tall modals scroll on short phone screens instead of clipping. The auto
+     margins keep short modals vertically centered; when a modal is taller than
+     the viewport, the overlay scrolls from the top rather than cutting it off. */
+  .modal-overlay {
+    align-items: flex-start;
+    overflow-y: auto;
+    padding: 16px 12px;
+  }
+  .modal-card {
+    margin-top: auto;
+    margin-bottom: auto;
+  }
 }
 
 /* ---------- Fork Learning Path Layout ---------- */
