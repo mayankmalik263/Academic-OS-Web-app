@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useAudio } from '../../hooks/useAudio';
 import { roadmap } from '../../data/roadmapData';
@@ -10,8 +10,28 @@ interface LearningPathProps {
   onNodeClick: (type: 'topic' | 'project' | 'gate', id: string, phaseIndex: number) => void;
 }
 
-// Coordinate calculator for winding nodes
-const getCoords = (i: number, centerX: number, startY: number, spacingY: number) => {
+// Mobile breakpoint matches the existing 580px media query in index.css.
+// The winding node layout is computed in JS (fixed px columns), so we need the
+// breakpoint in JS to stack the two tracks vertically instead of side-by-side.
+const MOBILE_QUERY = '(max-width: 580px)';
+
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia(MOBILE_QUERY).matches
+  );
+  useEffect(() => {
+    const mq = window.matchMedia(MOBILE_QUERY);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    setIsMobile(mq.matches);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+  return isMobile;
+};
+
+// Coordinate calculator for winding nodes. windScale shrinks the horizontal
+// winding offset (1 = full desktop winding, <1 for the narrower mobile column).
+const getCoords = (i: number, centerX: number, startY: number, spacingY: number, windScale = 1) => {
   const idx = i % 8;
   let offsetX = 0;
   if (idx === 0) offsetX = 0;
@@ -23,7 +43,7 @@ const getCoords = (i: number, centerX: number, startY: number, spacingY: number)
   else if (idx === 6) offsetX = -44;
   else if (idx === 7) offsetX = -22;
   return {
-    x: centerX + offsetX,
+    x: centerX + offsetX * windScale,
     y: startY + (i * spacingY)
   };
 };
@@ -31,6 +51,10 @@ const getCoords = (i: number, centerX: number, startY: number, spacingY: number)
 export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
   const { progress } = useAuth();
   const { playSound } = useAudio();
+  const isMobile = useIsMobile();
+  // On mobile the tracks stack full-width; shrink the winding so wide node
+  // labels don't spill past a narrow phone viewport.
+  const windScale = isMobile ? 0.5 : 1;
 
   // Expanded resources panel accordion
   const [expandedDetails, setExpandedDetails] = useState<Record<string, boolean>>({});
@@ -128,13 +152,13 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
   };
 
   // Helper to render connection lines between circles inside a column
-  const renderColumnLines = (items: any[], isCompletedCheck: (id: string) => boolean, centerX: number, startY: number, spacingY: number) => {
+  const renderColumnLines = (items: any[], isCompletedCheck: (id: string) => boolean, centerX: number, startY: number, spacingY: number, windScale = 1) => {
     if (items.length <= 1) return null;
 
     const segments: React.ReactNode[] = [];
     for (let i = 0; i < items.length - 1; i++) {
-      const p1 = getCoords(i, centerX, startY, spacingY);
-      const p2 = getCoords(i + 1, centerX, startY, spacingY);
+      const p1 = getCoords(i, centerX, startY, spacingY, windScale);
+      const p2 = getCoords(i + 1, centerX, startY, spacingY, windScale);
       
       const segmentDone = isCompletedCheck(items[i].id) && isCompletedCheck(items[i + 1].id);
       const strokeColor = segmentDone 
@@ -204,18 +228,18 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
               </div>
             </div>
 
-            {/* Parallel Fully Expanded Tracks */}
-            <div 
-              className="flex justify-center items-start my-8 px-2 max-w-xl mx-auto gap-4 md:gap-12"
-              style={{ 
-                opacity: unlocked ? 1 : 0.5, 
+            {/* Parallel Fully Expanded Tracks (stacked vertically on mobile) */}
+            <div
+              className={`flex px-2 max-w-xl mx-auto gap-4 md:gap-12 ${isMobile ? 'flex-col items-center my-8' : 'justify-center items-start my-8'}`}
+              style={{
+                opacity: unlocked ? 1 : 0.5,
                 filter: unlocked ? 'none' : 'grayscale(1)',
-                height: `${maxTrackHeight}px` 
+                height: isMobile ? 'auto' : `${maxTrackHeight}px`
               }}
             >
               {/* Left Column: Math & Theory */}
-              <div 
-                className="relative" 
+              <div
+                className="relative"
                 style={{ width: '200px', height: `${columnHeightTheory}px` }}
               >
                 <h3 className="absolute -top-8 left-0 right-0 text-[10px] font-black uppercase tracking-widest text-[var(--text-faint)] border-b border-[var(--border-color)] pb-1.5 w-full text-center">
@@ -223,19 +247,20 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
                 </h3>
                 
                 {renderColumnLines(
-                  theoryItems.map(item => ({ id: `t_${item.id}` })), 
+                  theoryItems.map(item => ({ id: `t_${item.id}` })),
                   (id) => !!progress[id],
                   100, // centerX
                   36,  // startY
-                  140  // spacingY
+                  140, // spacingY
+                  windScale
                 )}
-                
+
                 {theoryItems.map((item, idx) => {
                   const checkId = `t_${item.id}`;
                   const isCompleted = !!progress[checkId];
                   const isCurrent = unlocked && !isCompleted && theoryItems.slice(0, idx).every(prev => progress[`t_${prev.id}`]);
                   const status = isCompleted ? 'completed' : (isCurrent ? 'current' : 'locked');
-                  const { x, y } = getCoords(idx, 100, 36, 140);
+                  const { x, y } = getCoords(idx, 100, 36, 140, windScale);
 
                   return (
                     <div 
@@ -262,15 +287,17 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
                 })}
               </div>
 
-              {/* Divider vertical rule in middle */}
-              <div 
-                className="border-r border-[var(--border-color)] self-stretch my-2 opacity-50"
-                style={{ height: `${maxTrackHeight - 40}px` }}
-              ></div>
+              {/* Divider vertical rule in middle (desktop only; hidden when stacked) */}
+              {!isMobile && (
+                <div
+                  className="border-r border-[var(--border-color)] self-stretch my-2 opacity-50"
+                  style={{ height: `${maxTrackHeight - 40}px` }}
+                ></div>
+              )}
 
               {/* Right Column: Python Coding */}
-              <div 
-                className="relative"
+              <div
+                className={`relative ${isMobile ? 'mt-10' : ''}`}
                 style={{ width: '200px', height: `${columnHeightPython}px` }}
               >
                 <h3 className="absolute -top-8 left-0 right-0 text-[10px] font-black uppercase tracking-widest text-[var(--color-gold)] border-b border-[var(--border-color)] pb-1.5 w-full text-center">
@@ -278,18 +305,19 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
                 </h3>
 
                 {renderColumnLines(
-                  pythonItems.map(item => ({ id: item.id })), 
+                  pythonItems.map(item => ({ id: item.id })),
                   (id) => !!progress[id],
                   100, // centerX
                   36,  // startY
-                  140  // spacingY
+                  140, // spacingY
+                  windScale
                 )}
 
                 {pythonItems.map((item, idx) => {
                   const isCompleted = !!progress[item.id];
                   const isCurrent = unlocked && !isCompleted && pythonItems.slice(0, idx).every(prev => progress[prev.id]);
                   const status = isCompleted ? 'completed' : (isCurrent ? 'current' : 'locked');
-                  const { x, y } = getCoords(idx, 100, 36, 140);
+                  const { x, y } = getCoords(idx, 100, 36, 140, windScale);
 
                   return (
                     <div 
