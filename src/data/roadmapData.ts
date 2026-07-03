@@ -77,7 +77,9 @@ export const roadmap: RoadmapPhase[] = [
       basic: [
         { name: "3Blue1Brown - Essence of Linear Algebra", url: "https://www.youtube.com/playlist?list=PLZHQObOWTQDPD3MizzM2xVFitgF8hE_ab" },
         { name: "StatQuest - Statistics Fundamentals", url: "https://www.youtube.com/playlist?list=PLtBcD7a4ZgDdrnJ7_Wv0Bw7sZfG6C_U2a" },
-        { name: "Corey Schafer - Python OOP series (Python bits)", url: "https://www.youtube.com/playlist?list=PL-osiE80TeTsqhIuOqKhRlXSIB35bY26y" }
+        { name: "Corey Schafer - Python OOP series (Python bits)", url: "https://www.youtube.com/playlist?list=PL-osiE80TeTsqhIuOqKhRlXSIB35bY26y" },
+        { name: "uv - Python Environment & Package Manager", url: null },
+        { name: "marimo - Reactive Python Notebooks", url: null }
       ],
       intermediate: [
         { name: "MIT 18.06 - Gilbert Strang", url: "https://www.youtube.com/playlist?list=PL49CF3715CB72B641" },
@@ -226,12 +228,14 @@ export const roadmap: RoadmapPhase[] = [
       basic: [
         { name: "StatQuest - Josh Starmer (ML Playlist)", url: "https://www.youtube.com/playlist?list=PLtBcD7a4ZgDfdnL8L9L7oPysMv64D42bA" },
         { name: "CampusX - ML Series in Hinglish", url: "https://www.youtube.com/playlist?list=PLKnIAqWlhFTV2Q1G52G8k75g9-p6wX-bM" },
-        { name: "Scikit-Learn User Guide (Scratch to library)", url: "https://scikit-learn.org/stable/user_guide.html" }
+        { name: "Scikit-Learn User Guide (Scratch to library)", url: "https://scikit-learn.org/stable/user_guide.html" },
+        { name: "polars - High-Performance DataFrame Library", url: null }
       ],
       intermediate: [
         { name: "ISLR - James, Witten, Hastie (Ch. 4-9)", url: "https://www.statlearning.com/" },
         { name: "ESL - Hastie, Tibshirani (Ch. 3-5)", url: "https://hastie.su.domains/ElemStatLearn/" },
-        { name: "Hands-On ML - Aurelien Geron (Un-park first!)", url: "https://github.com/ageron/handson-ml3" }
+        { name: "Hands-On ML - Aurelien Geron (Un-park first!)", url: "https://github.com/ageron/handson-ml3" },
+        { name: "Book: Chip Huyen, 'Designing Machine Learning Systems'", url: null }
       ],
       advanced: [
         { name: "ESL Ch. 10 Boosting", url: "https://hastie.su.domains/ElemStatLearn/" },
@@ -336,9 +340,10 @@ export const roadmap: RoadmapPhase[] = [
         { name: "fast.ai - Practical Deep Learning Pt. 1", url: "https://course.fast.ai/" }
       ],
       intermediate: [
-        { name: "Karpathy - Zero to Hero (full playlist)", url: "https://www.youtube.com/playlist?list=PLjxrf2q8roU29A6HsR07F1ziT6yF857JH" },
+        { name: "Karpathy - Zero to Hero (full playlist)", url: "https://www.youtube.com/playlist?list=PLjxrf2q8roU23XGwz3yGTliNSfQr1FstG" },
         { name: "NYU Deep Learning - Yann LeCun (2021)", url: "https://cds.nyu.edu/deep-learning/" },
-        { name: "PyTorch Docs - Autograd & nn.Module deep dive", url: "https://pytorch.org/docs/stable/index.html" }
+        { name: "PyTorch Docs - Autograd & nn.Module deep dive", url: "https://pytorch.org/docs/stable/index.html" },
+        { name: "safetensors - Safe & Fast Weights Saving", url: null }
       ],
       advanced: [
         { name: "Deep Learning Book - Goodfellow (Ch. 6-9)", url: "https://www.deeplearningbook.org/" },
@@ -457,19 +462,24 @@ export const roadmap: RoadmapPhase[] = [
         { name: "Stanford CS224n - Lectures 1-5 (Manning)", url: "https://web.stanford.edu/class/cs224n/" },
         { name: "Jay Alammar's blog - Visualizing NLP models", url: "https://jalammar.github.io/" },
         { name: "Prompt Engineering Guide - promptingguide.ai", url: "https://www.promptingguide.ai/" },
-        { name: "Andrew Ng - ChatGPT Prompt Engineering", url: "https://www.deeplearning.ai/short-courses/chatgpt-prompt-engineering-for-developers/" }
+        { name: "Andrew Ng - ChatGPT Prompt Engineering", url: "https://www.deeplearning.ai/short-courses/chatgpt-prompt-engineering-for-developers/" },
+        { name: "tiktoken - Fast BPE Tokenizer", url: null }
       ],
       intermediate: [
         { name: "HuggingFace NLP Course - Ch. 1-4", url: "https://huggingface.co/learn/nlp-course" },
         { name: "The Illustrated LSTM - Jay Alammar", url: "https://jalammar.github.io/illustrated-lstm/" },
         { name: "LangChain Python Docs + Cookbook", url: "https://python.langchain.com/docs/introduction/" },
-        { name: "Vector DBs: FAISS, Chroma, Pinecone (docs)", url: "https://faiss.ai/" }
+        { name: "Vector DBs: FAISS, Chroma, Pinecone (docs)", url: "https://faiss.ai/" },
+        { name: "sentence-transformers - Text Embeddings", url: null },
+        { name: "ragas - Evaluation framework for RAG", url: null }
       ],
       advanced: [
         { name: "Attention Is All You Need - Vaswani et al., 2017", url: "https://arxiv.org/abs/1706.03762" },
         { name: "LoRA - Hu et al., 2021 & QLoRA - Dettmers, 2023", url: "https://arxiv.org/abs/2106.09685" },
         { name: "LlamaIndex Docs", url: "https://www.llamaindex.ai/" },
-        { name: "InstructGPT + DPO papers", url: "https://arxiv.org/abs/2203.02155" }
+        { name: "InstructGPT + DPO papers", url: "https://arxiv.org/abs/2203.02155" },
+        { name: "vLLM - High-Throughput serving engine", url: null },
+        { name: "Book: Sebastian Raschka, 'Build a Large Language Model from Scratch'", url: null }
       ],
       optionalProject: "NLP/LLM: sentiment analyser comparing Naive Bayes vs a neural model."
     }

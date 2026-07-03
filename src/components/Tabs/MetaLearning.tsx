@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const META_RULES = [
   {
@@ -48,43 +48,106 @@ const META_RULES = [
   }
 ];
 
-export const MetaLearning: React.FC = () => {
-  return (
-    <div className="card text-left">
-      <h2 className="card-title text-2xl font-black">Meta-Learning System</h2>
-      <p className="text-sm text-[var(--text-muted)] mb-6">
-        Open before each study session to align your study habits with cognitive science principles.
-      </p>
+const MENTAL_MODELS = [
+  "Bias/variance: underfitting trades off with overfitting; more data, regularization, and better features shift the curve.",
+  "Backprop is just the chain rule: each layer caches what it needs for its local gradient; the framework does the bookkeeping.",
+  "Attention is soft lookup: queries match keys to weight values; O(n²) in sequence length without tricks.",
+  "KV cache: at inference, past keys/values are cached so each new token costs O(n), not O(n²).",
+  "PEFT: train a tiny set of new params (LoRA adapters), freeze the base; cheap, composable, near-full-FT quality.",
+  "RAG vs fine-tune: RAG injects fresh knowledge at query time; FT changes behavior/style. Use both, not either/or.",
+  "LLM-as-judge: useful but biased toward verbosity, position, and self-preference; always pair with golden sets.",
+  "MFU/HFU: model FLOPs utilization shows how close training is to hardware peak; under 30% means wasted money.",
+  "Drift: data drift (inputs), concept drift (relationships), prediction drift (outputs). Monitor all three.",
+  "Prompt injection is the new SQLi: never trust tool args or retrieved text; validate, sandbox, allowlist."
+];
 
-      <div className="meta-panel flex flex-col gap-4">
-        {META_RULES.map((rule) => (
-          <div key={rule.badge} className="meta-item flex gap-4 p-4 border-2 border-[var(--border-color)] bg-[var(--bg-main)] rounded-2xl">
-            <div className="meta-badge flex-shrink-0 flex items-center justify-center bg-[var(--meta-bullet-bg)] text-[var(--meta-bullet-text)] font-black text-sm w-9 h-9 border-2 border-[var(--border-color)] rounded-xl">
-              {rule.badge}
-            </div>
-            <div className="meta-content flex-1">
-              <h3 className="meta-title font-extrabold text-base text-[var(--text-main)] mb-1">
-                {rule.title}
-              </h3>
-              <p className="meta-desc text-xs text-[var(--text-muted)] leading-relaxed">
-                {rule.desc}
+export const MetaLearning: React.FC = () => {
+  const [glossaryExpanded, setGlossaryExpanded] = useState(true);
+
+  return (
+    <div className="flex flex-col gap-6">
+      {/* Mental Models Glossary Card (reference-only) */}
+      <div className="card text-left">
+        <button 
+          onClick={() => setGlossaryExpanded(!glossaryExpanded)}
+          className="w-full flex items-center justify-between text-left focus:outline-none cursor-pointer"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🧠</span>
+            <div>
+              <h2 className="card-title text-xl md:text-2xl font-black">Mental Models</h2>
+              <p className="text-xs text-[var(--text-muted)] font-medium">
+                Reference guidelines and conceptual summaries for ML/LLM systems.
               </p>
             </div>
           </div>
-        ))}
+          <span className="text-lg font-bold text-[var(--text-muted)] select-none">
+            {glossaryExpanded ? '▲' : '▼'}
+          </span>
+        </button>
 
-        {/* Keystone Highlight Rule */}
-        <div className="meta-item flex gap-4 p-4 border-2 border-[var(--color-orange)] bg-[var(--bg-main)] rounded-2xl">
-          <div className="meta-badge flex-shrink-0 flex items-center justify-center bg-[var(--color-orange)] text-white font-black text-lg w-9 h-9 rounded-xl">
-            ★
+        {glossaryExpanded && (
+          <div className="mt-6 border-t border-[var(--border-color)] pt-5 flex flex-col gap-3">
+            {MENTAL_MODELS.map((model, idx) => {
+              const parts = model.split(':');
+              const term = parts[0];
+              const definition = parts.slice(1).join(':');
+
+              return (
+                <div 
+                  key={idx} 
+                  className="p-4 bg-[var(--bg-main)] border-2 border-[var(--border-color)] rounded-2xl text-xs hover:border-[var(--color-blue)] transition-all duration-200"
+                >
+                  <strong className="text-[var(--color-blue)] uppercase tracking-wider text-[10px] block mb-1.5 font-black">
+                    {term}
+                  </strong>
+                  <span className="text-[var(--text-main)] font-semibold leading-relaxed">
+                    {definition.trim()}
+                  </span>
+                </div>
+              );
+            })}
           </div>
-          <div className="meta-content flex-1">
-            <h3 className="meta-title font-extrabold text-base text-[var(--text-main)] mb-1">
-              Keystone Rule: Paper First
-            </h3>
-            <p className="meta-desc text-xs text-[var(--text-muted)] leading-relaxed">
-              <strong>Derive before building.</strong> Do not touch code until you have mapped the equations, dimensions, and derivatives on paper. Photograph your derivations to keep a visual proof-log.
-            </p>
+        )}
+      </div>
+
+      {/* Existing Meta Learning Card */}
+      <div className="card text-left">
+        <h2 className="card-title text-2xl font-black">Meta-Learning System</h2>
+        <p className="text-sm text-[var(--text-muted)] mb-6">
+          Open before each study session to align your study habits with cognitive science principles.
+        </p>
+
+        <div className="meta-panel flex flex-col gap-4">
+          {META_RULES.map((rule) => (
+            <div key={rule.badge} className="meta-item flex gap-4 p-4 border-2 border-[var(--border-color)] bg-[var(--bg-main)] rounded-2xl">
+              <div className="meta-badge flex-shrink-0 flex items-center justify-center bg-[var(--meta-bullet-bg)] text-[var(--meta-bullet-text)] font-black text-sm w-9 h-9 border-2 border-[var(--border-color)] rounded-xl">
+                {rule.badge}
+              </div>
+              <div className="meta-content flex-1">
+                <h3 className="meta-title font-extrabold text-base text-[var(--text-main)] mb-1">
+                  {rule.title}
+                </h3>
+                <p className="meta-desc text-xs text-[var(--text-muted)] leading-relaxed">
+                  {rule.desc}
+                </p>
+              </div>
+            </div>
+          ))}
+
+          {/* Keystone Highlight Rule */}
+          <div className="meta-item flex gap-4 p-4 border-2 border-[var(--color-orange)] bg-[var(--bg-main)] rounded-2xl">
+            <div className="meta-badge flex-shrink-0 flex items-center justify-center bg-[var(--color-orange)] text-white font-black text-lg w-9 h-9 rounded-xl">
+              ★
+            </div>
+            <div className="meta-content flex-1">
+              <h3 className="meta-title font-extrabold text-base text-[var(--text-main)] mb-1">
+                Keystone Rule: Paper First
+              </h3>
+              <p className="meta-desc text-xs text-[var(--text-muted)] leading-relaxed">
+                <strong>Derive before building.</strong> Do not touch code until you have mapped the equations, dimensions, and derivatives on paper. Photograph your derivations to keep a visual proof-log.
+              </p>
+            </div>
           </div>
         </div>
       </div>
