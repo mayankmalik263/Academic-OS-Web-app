@@ -10,17 +10,23 @@ interface LearningPathProps {
   onNodeClick: (type: 'topic' | 'project' | 'gate', id: string, phaseIndex: number) => void;
 }
 
-// Subtle alternating offsets for Duolingo-style winding column
-const columnOffsets = [
-  "translate-x-0",
-  "translate-x-3",
-  "translate-x-6",
-  "translate-x-3",
-  "translate-x-0",
-  "-translate-x-3",
-  "-translate-x-6",
-  "-translate-x-3"
-];
+// Coordinate calculator for winding nodes
+const getCoords = (i: number, centerX: number, startY: number, spacingY: number) => {
+  const idx = i % 8;
+  let offsetX = 0;
+  if (idx === 0) offsetX = 0;
+  else if (idx === 1) offsetX = 22;
+  else if (idx === 2) offsetX = 44;
+  else if (idx === 3) offsetX = 22;
+  else if (idx === 4) offsetX = 0;
+  else if (idx === 5) offsetX = -22;
+  else if (idx === 6) offsetX = -44;
+  else if (idx === 7) offsetX = -22;
+  return {
+    x: centerX + offsetX,
+    y: startY + (i * spacingY)
+  };
+};
 
 export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
   const { progress } = useAuth();
@@ -122,33 +128,13 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
   };
 
   // Helper to render connection lines between circles inside a column
-  const renderColumnLines = (items: any[], isCompletedCheck: (id: string) => boolean) => {
+  const renderColumnLines = (items: any[], isCompletedCheck: (id: string) => boolean, centerX: number, startY: number, spacingY: number) => {
     if (items.length <= 1) return null;
-    const centerX = 80;
-    const startY = 36;
-    const spacingY = 130;
-
-    const getCoords = (i: number) => {
-      const idx = i % 8;
-      let offsetX = 0;
-      if (idx === 0) offsetX = 0;
-      else if (idx === 1) offsetX = 12;
-      else if (idx === 2) offsetX = 24;
-      else if (idx === 3) offsetX = 12;
-      else if (idx === 4) offsetX = 0;
-      else if (idx === 5) offsetX = -12;
-      else if (idx === 6) offsetX = -24;
-      else if (idx === 7) offsetX = -12;
-      return {
-        x: centerX + offsetX,
-        y: startY + (i * spacingY)
-      };
-    };
 
     const segments: React.ReactNode[] = [];
     for (let i = 0; i < items.length - 1; i++) {
-      const p1 = getCoords(i);
-      const p2 = getCoords(i + 1);
+      const p1 = getCoords(i, centerX, startY, spacingY);
+      const p2 = getCoords(i + 1, centerX, startY, spacingY);
       
       const segmentDone = isCompletedCheck(items[i].id) && isCompletedCheck(items[i + 1].id);
       const strokeColor = segmentDone 
@@ -194,6 +180,11 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
         // Get Python items for this phase
         const pythonItems = pythonSubsteps[phase.id] || [];
 
+        // Dynamic height based on number of items in the column
+        const columnHeightTheory = theoryItems.length > 0 ? (theoryItems.length - 1) * 140 + 120 : 0;
+        const columnHeightPython = pythonItems.length > 0 ? (pythonItems.length - 1) * 140 + 120 : 0;
+        const maxTrackHeight = Math.max(columnHeightTheory, columnHeightPython);
+
         return (
           <div key={phase.id} className="unit-container" id={`phase-banner-${phaseIdx}`}>
             {/* Phase Banner */}
@@ -215,90 +206,114 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
 
             {/* Parallel Fully Expanded Tracks */}
             <div 
-              className="flex gap-8 md:gap-16 justify-center items-start my-8 px-2 max-w-xl mx-auto relative"
-              style={{ opacity: unlocked ? 1 : 0.5, filter: unlocked ? 'none' : 'grayscale(1)' }}
+              className="flex justify-center items-start my-8 px-2 max-w-xl mx-auto gap-4 md:gap-12"
+              style={{ 
+                opacity: unlocked ? 1 : 0.5, 
+                filter: unlocked ? 'none' : 'grayscale(1)',
+                height: `${maxTrackHeight}px` 
+              }}
             >
               {/* Left Column: Math & Theory */}
-              <div className="flex-1 flex flex-col items-center">
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-[var(--text-faint)] mb-4 border-b border-[var(--border-color)] pb-1.5 w-full text-center">
+              <div 
+                className="relative" 
+                style={{ width: '200px', height: `${columnHeightTheory}px` }}
+              >
+                <h3 className="absolute -top-8 left-0 right-0 text-[10px] font-black uppercase tracking-widest text-[var(--text-faint)] border-b border-[var(--border-color)] pb-1.5 w-full text-center">
                   Theory Core
                 </h3>
                 
-                {/* Winding list of nodes with SVG background lines */}
-                <div className="relative w-[160px] flex flex-col items-center gap-7">
-                  {renderColumnLines(
-                    theoryItems.map(item => ({ id: `t_${item.id}` })), 
-                    (id) => !!progress[id]
-                  )}
-                  
-                  {theoryItems.map((item, idx) => {
-                    const checkId = `t_${item.id}`;
-                    const isCompleted = !!progress[checkId];
-                    const isCurrent = unlocked && !isCompleted && theoryItems.slice(0, idx).every(prev => progress[`t_${prev.id}`]);
-                    const status = isCompleted ? 'completed' : (isCurrent ? 'current' : 'locked');
-                    const offsetClass = columnOffsets[idx % columnOffsets.length];
+                {renderColumnLines(
+                  theoryItems.map(item => ({ id: `t_${item.id}` })), 
+                  (id) => !!progress[id],
+                  100, // centerX
+                  36,  // startY
+                  140  // spacingY
+                )}
+                
+                {theoryItems.map((item, idx) => {
+                  const checkId = `t_${item.id}`;
+                  const isCompleted = !!progress[checkId];
+                  const isCurrent = unlocked && !isCompleted && theoryItems.slice(0, idx).every(prev => progress[`t_${prev.id}`]);
+                  const status = isCompleted ? 'completed' : (isCurrent ? 'current' : 'locked');
+                  const { x, y } = getCoords(idx, 100, 36, 140);
 
-                    return (
-                      <div key={item.id} className={`node-wrapper ${offsetClass} transition-all duration-200 z-10`}>
-                        <button
-                          onClick={() => unlocked && onNodeClick('topic', checkId, phaseIdx)}
-                          className={`node-btn ${status}`}
-                          disabled={!unlocked || status === 'locked'}
-                          aria-label={item.ttl}
-                        >
-                          {renderInsideIcon(status, 'topic')}
-                        </button>
-                        <span className="node-label">
-                          {item.ttl}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
+                  return (
+                    <div 
+                      key={item.id} 
+                      className="absolute -translate-x-1/2 flex flex-col items-center z-10"
+                      style={{ left: `${x}px`, top: `${y - 36}px`, width: '180px' }}
+                    >
+                      <button
+                        onClick={() => unlocked && onNodeClick('topic', checkId, phaseIdx)}
+                        className={`node-btn ${status}`}
+                        disabled={!unlocked || status === 'locked'}
+                        aria-label={item.ttl}
+                      >
+                        {renderInsideIcon(status, 'topic')}
+                      </button>
+                      <span className="node-label">
+                        {item.ttl}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
 
+              {/* Divider vertical rule in middle */}
+              <div 
+                className="border-r border-[var(--border-color)] self-stretch my-2 opacity-50"
+                style={{ height: `${maxTrackHeight - 40}px` }}
+              ></div>
+
               {/* Right Column: Python Coding */}
-              <div className="flex-1 flex flex-col items-center">
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-[var(--color-gold)] mb-4 border-b border-[var(--border-color)] pb-1.5 w-full text-center">
+              <div 
+                className="relative"
+                style={{ width: '200px', height: `${columnHeightPython}px` }}
+              >
+                <h3 className="absolute -top-8 left-0 right-0 text-[10px] font-black uppercase tracking-widest text-[var(--color-gold)] border-b border-[var(--border-color)] pb-1.5 w-full text-center">
                   Python Coding
                 </h3>
 
-                {/* Winding list of nodes with SVG background lines */}
-                <div className="relative w-[160px] flex flex-col items-center gap-7">
-                  {renderColumnLines(
-                    pythonItems.map(item => ({ id: item.id })), 
-                    (id) => !!progress[id]
-                  )}
+                {renderColumnLines(
+                  pythonItems.map(item => ({ id: item.id })), 
+                  (id) => !!progress[id],
+                  100, // centerX
+                  36,  // startY
+                  140  // spacingY
+                )}
 
-                  {pythonItems.map((item, idx) => {
-                    const isCompleted = !!progress[item.id];
-                    const isCurrent = unlocked && !isCompleted && pythonItems.slice(0, idx).every(prev => progress[prev.id]);
-                    const status = isCompleted ? 'completed' : (isCurrent ? 'current' : 'locked');
-                    const offsetClass = columnOffsets[idx % columnOffsets.length];
+                {pythonItems.map((item, idx) => {
+                  const isCompleted = !!progress[item.id];
+                  const isCurrent = unlocked && !isCompleted && pythonItems.slice(0, idx).every(prev => progress[prev.id]);
+                  const status = isCompleted ? 'completed' : (isCurrent ? 'current' : 'locked');
+                  const { x, y } = getCoords(idx, 100, 36, 140);
 
-                    return (
-                      <div key={item.id} className={`node-wrapper ${offsetClass} transition-all duration-200 z-10`}>
-                        <button
-                          onClick={() => unlocked && onNodeClick('topic', item.id, phaseIdx)}
-                          className={`node-btn yellow ${status}`}
-                          disabled={!unlocked || status === 'locked'}
-                          aria-label={item.ttl}
-                        >
-                          {renderInsideIcon(status, 'topic')}
-                        </button>
-                        <span className="node-label">
-                          {item.ttl}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
+                  return (
+                    <div 
+                      key={item.id} 
+                      className="absolute -translate-x-1/2 flex flex-col items-center z-10"
+                      style={{ left: `${x}px`, top: `${y - 36}px`, width: '180px' }}
+                    >
+                      <button
+                        onClick={() => unlocked && onNodeClick('topic', item.id, phaseIdx)}
+                        className={`node-btn yellow ${status}`}
+                        disabled={!unlocked || status === 'locked'}
+                        aria-label={item.ttl}
+                      >
+                        {renderInsideIcon(status, 'topic')}
+                      </button>
+                      <span className="node-label">
+                        {item.ttl}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
             {/* Reconnect Center Area - Projects & Gates */}
             <div 
-              className="flex flex-col items-center gap-7 border-t border-[var(--border-color)] pt-8 max-w-sm mx-auto my-6"
+              className="flex flex-col items-center gap-7 border-t border-[var(--border-color)] pt-8 max-w-sm mx-auto my-6 mt-16"
               style={{ opacity: unlocked ? 1 : 0.5, filter: unlocked ? 'none' : 'grayscale(1)' }}
             >
               {/* Project Node */}

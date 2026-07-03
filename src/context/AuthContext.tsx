@@ -167,11 +167,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         refreshUserData().then(() => {
           isInitialized = true;
           setLoading(false);
+        }).catch((err) => {
+          console.error("Error in refreshUserData on mount:", err);
+          isInitialized = true;
+          setLoading(false);
         });
       } else {
         isInitialized = true;
         setLoading(false);
       }
+    }).catch((err) => {
+      console.error("Error in getSession on mount:", err);
+      isInitialized = true;
+      setLoading(false);
     });
 
     // Listen for auth state changes (runs silently in the background after initial mount)
@@ -185,10 +193,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (!isInitialized) {
             setLoading(true);
           }
-          await refreshUserData();
-          if (!isInitialized) {
-            isInitialized = true;
-            setLoading(false);
+          try {
+            await refreshUserData();
+          } catch (err) {
+            console.error("Error in silent auth refresh:", err);
+          } finally {
+            if (!isInitialized) {
+              isInitialized = true;
+              setLoading(false);
+            }
           }
         } else {
           clearState();
