@@ -340,11 +340,26 @@ const AppContent: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+
   const handleNodeClick = (type: 'topic' | 'project' | 'gate', id: string, phaseIndex: number) => {
     playSound('click');
     const phase = roadmap[phaseIndex];
 
     if (type === 'topic') {
+      if (id.startsWith('pyslice_')) {
+        const phaseId = id.replace('pyslice_', '');
+        const targetPhase = roadmap.find(p => p.id === phaseId) || phase;
+        const syntheticTopic: RoadmapItem = {
+          id: id,
+          ttl: `${targetPhase.name.replace(/^Phase \d+ - /, "")} - Coding Slice`,
+          learn: targetPhase.pyslice || 'Core programming syntax, logic loops, and framework integrations.',
+          skip: "Heavy libraries, wrapper code, premature optimizations. Keep it code-first.",
+          search: `python programming data analysis tutorial`
+        };
+        setActiveLesson(syntheticTopic);
+        return;
+      }
+
       const topicId = id.replace(/^t_/, '');
       const group = phase.groups.find(g => g.items.some(t => t.id === topicId));
       const topic = group?.items.find(t => t.id === topicId);

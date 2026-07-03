@@ -2,41 +2,46 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useAudio } from '../../hooks/useAudio';
 import { roadmap } from '../../data/roadmapData';
-import type { RoadmapPhase } from '../../types/roadmap';
+import type { RoadmapPhase, RoadmapItem, RoadmapProject } from '../../types/roadmap';
 import { SVG_ICONS } from '../Common/Assets';
+import { TheoryListModal } from '../Modals/TheoryListModal';
 
 interface LearningPathProps {
   onNodeClick: (type: 'topic' | 'project' | 'gate', id: string, phaseIndex: number) => void;
 }
 
-const offsetClasses = [
-  "offset-center",
-  "offset-right-1",
-  "offset-right-2",
-  "offset-right-1",
-  "offset-center",
-  "offset-left-1",
-  "offset-left-2",
-  "offset-left-1"
-];
-
-const unitColors = [
-  "var(--color-green)",
-  "var(--color-blue)",
-  "var(--color-purple)",
-  "var(--color-orange)"
-];
-
 export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
   const { progress } = useAuth();
   const { playSound } = useAudio();
 
-  // Track expanded resource states locally
+  // Expanded resources panel accordion
   const [expandedDetails, setExpandedDetails] = useState<Record<string, boolean>>({});
+
+  // Local state for the Theory checklist popup modal
+  const [theoryModalOpen, setTheoryModalOpen] = useState(false);
+  const [activeTheoryPhase, setActiveTheoryPhase] = useState<RoadmapPhase | null>(null);
+  const [activeTheoryPhaseIdx, setActiveTheoryPhaseIdx] = useState<number>(0);
 
   const toggleDetails = (phaseId: string) => {
     playSound('click');
     setExpandedDetails(prev => ({ ...prev, [phaseId]: !prev[phaseId] }));
+  };
+
+  const handleTheoryNodeClick = (phase: RoadmapPhase, idx: number) => {
+    playSound('click');
+    setActiveTheoryPhase(phase);
+    setActiveTheoryPhaseIdx(idx);
+    setTheoryModalOpen(true);
+  };
+
+  const handlePythonNodeClick = (phase: RoadmapPhase, idx: number) => {
+    playSound('click');
+    onNodeClick('topic', `pyslice_${phase.id}`, idx);
+  };
+
+  const handleTopicSelect = (topic: RoadmapItem) => {
+    // Forward the select event to the parent AppContent container
+    onNodeClick('topic', `t_${topic.id}`, activeTheoryPhaseIdx);
   };
 
   // Helper to determine if a phase is unlocked
@@ -44,6 +49,29 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
     if (phaseIndex === 0) return true;
     const prevPhase = roadmap[phaseIndex - 1];
     return prevPhase.gate.criteria.every(c => progress[`gate_${c.id}`]);
+  };
+
+  // Helper to check if the theory/math topics are completed
+  const isPhaseTheoryCompleted = (phase: RoadmapPhase) => {
+    return phase.groups.every(g => g.items.every(t => progress[`t_${t.id}`]));
+  };
+
+  // Helper to check if the Python slice is completed
+  const isPythonSliceCompleted = (phaseId: string) => {
+    return !!progress[`pyslice_${phaseId}`];
+  };
+
+  // Helper to check if a project is completed
+  const isProjectCompleted = (pr: RoadmapProject) => {
+    const paperIDs = pr.paper.map((_, idx) => `pp_${pr.id}_${idx}`);
+    const buildIDs = pr.build.map((_, idx) => `pb_${pr.id}_${idx}`);
+    const doneIDs = pr.done.map((_, idx) => `pd_${pr.id}_${idx}`);
+    return [...paperIDs, ...buildIDs, ...doneIDs].every(id => progress[id]);
+  };
+
+  // Helper to check if a gate is completed
+  const isGateCompleted = (phase: RoadmapPhase) => {
+    return phase.gate.criteria.every(c => progress[`gate_${c.id}`]);
   };
 
   // Helper to calculate progress percentage for a phase
@@ -57,6 +85,10 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
         if (progress[`t_${t.id}`]) completedItems++;
       });
     });
+
+    // Add 1 slot for the Python slice itself
+    totalItems++;
+    if (progress[`pyslice_${phase.id}`]) completedItems++;
 
     phase.projects.forEach(pr => {
       pr.paper.forEach((_, i) => {
@@ -79,107 +111,6 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
     });
 
     return totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
-  };
-
-  // Flatten nodes for rendering
-  const getPhaseNodes = (p: RoadmapPhase) => {
-    const nodes: any[] = [];
-    p.groups.forEach(g => {
-      g.items.forEach(t => {
-        nodes.push({
-          type: t.optional ? "sidequest" : "topic",
-          id: `t_${t.id}`,
-          title: t.ttl,
-          code: t.id,
-          data: t,
-          keystone: !!t.keystone,
-          optional: !!t.optional
-        });
-      });
-    });
-
-    p.projects.forEach(pr => {
-      nodes.push({
-        type: "project",
-        id: pr.id,
-        title: pr.ttl,
-        code: pr.id,
-        data: pr,
-        keystone: true
-      });
-    });
-
-    nodes.push({
-      type: "gate",
-      id: `gate_${p.id}`,
-      title: p.gate.title,
-      code: "GATE",
-      data: p.gate,
-      keystone: true
-    });
-
-    return nodes;
-  };
-
-  // Compute active task in the whole path
-  const getCurrentTask = () => {
-    for (let i = 0; i < roadmap.length; i++) {
-      const p = roadmap[i];
-      if (!isPhaseUnlocked(i)) continue;
-
-      for (const g of p.groups) {
-        for (const t of g.items) {
-          if (t.optional) continue;
-          if (!progress[`t_${t.id}`]) {
-            return { type: 'topic', id: `t_${t.id}` };
-          }
-        }
-      }
-
-      for (const pr of p.projects) {
-        const paperIDs = pr.paper.map((_, idx) => `pp_${pr.id}_${idx}`);
-        const buildIDs = pr.build.map((_, idx) => `pb_${pr.id}_${idx}`);
-        const doneIDs = pr.done.map((_, idx) => `pd_${pr.id}_${idx}`);
-        const allIDs = [...paperIDs, ...buildIDs, ...doneIDs];
-        const incomplete = allIDs.find(id => !progress[id]);
-        if (incomplete) {
-          return { type: 'project', id: pr.id };
-        }
-      }
-
-      const gateIDs = p.gate.criteria.map(c => `gate_${c.id}`);
-      const incompleteGate = gateIDs.find(id => !progress[id]);
-      if (incompleteGate) {
-        return { type: 'gate', id: `gate_${p.id}` };
-      }
-    }
-    return null;
-  };
-
-  const currentTask = getCurrentTask();
-
-  const getNodeStatus = (node: any, phaseIndex: number) => {
-    if (!isPhaseUnlocked(phaseIndex)) return "locked";
-
-    let isComplete = false;
-    if (node.type === "topic" || node.type === "sidequest") {
-      isComplete = !!progress[node.id];
-    } else if (node.type === "project") {
-      const pr = node.data;
-      const paperIDs = pr.paper.map((_: string, idx: number) => `pp_${pr.id}_${idx}`);
-      const buildIDs = pr.build.map((_: string, idx: number) => `pb_${pr.id}_${idx}`);
-      const doneIDs = pr.done.map((_: string, idx: number) => `pd_${pr.id}_${idx}`);
-      isComplete = [...paperIDs, ...buildIDs, ...doneIDs].every(id => progress[id]);
-    } else if (node.type === "gate") {
-      const gate = node.data;
-      isComplete = gate.criteria.every((c: any) => progress[`gate_${c.id}`]);
-    }
-
-    if (isComplete) return "completed";
-    if (node.type === "sidequest") return "current"; // Sidequests are unlocked since their phase is active
-    if (currentTask && node.type === currentTask.type && node.id === currentTask.id) return "current";
-
-    return "locked";
   };
 
   const renderInsideIcon = (status: string, type: string) => {
@@ -214,32 +145,10 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
       {roadmap.map((phase, phaseIdx) => {
         const unlocked = isPhaseUnlocked(phaseIdx);
         const pct = calculatePhaseProgress(phase);
-        const bannerColor = unitColors[phaseIdx % unitColors.length];
-        const nodes = getPhaseNodes(phase);
+        const bannerColor = phaseIdx === 0 ? "var(--color-blue)" : phaseIdx === 1 ? "var(--color-green)" : phaseIdx === 2 ? "var(--color-purple)" : "var(--color-orange)";
 
-        // Group main winding nodes vs sidequests
-        // We accumulate main nodes and attach sidequests inside their preceding main node
-        const renderNodes: any[] = [];
-        let tempMainNodeCount = 0;
-
-        nodes.forEach((node) => {
-          const status = getNodeStatus(node, phaseIdx);
-          if (node.type === "sidequest") {
-            const lastMain = renderNodes[renderNodes.length - 1];
-            if (lastMain) {
-              if (!lastMain.sidequests) lastMain.sidequests = [];
-              lastMain.sidequests.push({ ...node, status });
-            }
-          } else {
-            renderNodes.push({
-              ...node,
-              status,
-              offsetClass: offsetClasses[tempMainNodeCount % offsetClasses.length],
-              sidequests: []
-            });
-            tempMainNodeCount++;
-          }
-        });
+        const theoryStatus = unlocked ? (isPhaseTheoryCompleted(phase) ? 'completed' : 'current') : 'locked';
+        const pythonStatus = unlocked ? (isPythonSliceCompleted(phase.id) ? 'completed' : 'current') : 'locked';
 
         return (
           <div key={phase.id} className="unit-container" id={`phase-banner-${phaseIdx}`}>
@@ -260,65 +169,109 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
               </div>
             </div>
 
-            {/* Python Slice */}
-            {phase.pyslice && (
-              <div className="python-slice-card text-left">
-                <strong className="text-xs">Python Slice:</strong> {phase.pyslice}
-              </div>
-            )}
-
-            {/* Nodes Path */}
+            {/* Split Fork Learning Path */}
             <div 
-              className="path-nodes-container"
+              className="path-fork-container fork-spacing" 
               style={{ opacity: unlocked ? 1 : 0.5, filter: unlocked ? 'none' : 'grayscale(1)' }}
             >
-              <div className="path-connector-line"></div>
+              {/* Triangular fork path lines */}
+              <svg className="path-fork-svg" viewBox="0 0 320 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                {/* Left path (Theory) */}
+                <line x1="160" y1="10" x2="65" y2="105" stroke="var(--border-color)" strokeWidth="6" strokeLinecap="round" />
+                {/* Right path (Python Coding) */}
+                <line x1="160" y1="10" x2="255" y2="105" stroke="var(--border-color)" strokeWidth="6" strokeLinecap="round" />
+                {/* Left bottom path (Theory merge) */}
+                <line x1="65" y1="105" x2="160" y2="200" stroke="var(--border-color)" strokeWidth="6" strokeLinecap="round" />
+                {/* Right bottom path (Python merge) */}
+                <line x1="255" y1="105" x2="160" y2="200" stroke="var(--border-color)" strokeWidth="6" strokeLinecap="round" />
+              </svg>
 
-              {renderNodes.map((mainNode) => {
-                const nodeBtnClass = `node-btn ${mainNode.type === 'project' ? 'project-boss' : ''} ${mainNode.type === 'gate' ? 'gate-boss' : ''} ${mainNode.status}`;
-                
-                return (
-                  <div key={mainNode.id} className={`node-wrapper ${mainNode.offsetClass}`}>
-                    {/* Main Node */}
-                    <button
-                      onClick={() => unlocked && onNodeClick(mainNode.type, mainNode.id, phaseIdx)}
-                      className={nodeBtnClass}
-                      aria-label={mainNode.title}
-                      disabled={!unlocked || mainNode.status === 'locked'}
-                    >
-                      {renderInsideIcon(mainNode.status, mainNode.type)}
-                    </button>
-                    <span className="node-label">
-                      {mainNode.code === 'GATE' ? '' : `${mainNode.code}: `}{mainNode.title}
-                    </span>
+              {/* Top connector dot */}
+              <div className="path-center-top"></div>
 
-                    {/* Attached Sidequests */}
-                    {mainNode.sidequests && mainNode.sidequests.map((sq: any, sqIdx: number) => {
-                      const branchSide = sqIdx % 2 === 0 ? 'branch-right' : 'branch-left';
-                      const sqBtnClass = `node-btn sidequest ${sq.status}`;
-                      
-                      return (
-                        <React.Fragment key={sq.id}>
-                          <div className={`sidequest-node ${branchSide}`}>
-                            <button
-                              onClick={() => unlocked && onNodeClick('topic', sq.id, phaseIdx)}
-                              className={sqBtnClass}
-                              aria-label={sq.title}
-                              disabled={!unlocked || sq.status === 'locked'}
-                            >
-                              {renderInsideIcon(sq.status, sq.type)}
-                            </button>
-                            <span className="node-label" style={{ backgroundColor: 'var(--active-node-bg)', borderColor: 'var(--color-purple)' }}>
-                              {sq.code}: {sq.title}
-                            </span>
-                          </div>
-                          <div className="sidequest-node-line"></div>
-                        </React.Fragment>
-                      );
-                    })}
-                  </div>
-                );
-              })}
+              {/* Left Branch - Theory Node */}
+              <div className="path-fork-left">
+                <button
+                  onClick={() => unlocked && handleTheoryNodeClick(phase, phaseIdx)}
+                  className={`node-btn ${theoryStatus}`}
+                  aria-label="Theory Topics"
+                  disabled={!unlocked}
+                >
+                  {renderInsideIcon(theoryStatus, 'topic')}
+                </button>
+                <span className="node-label">
+                  {phaseIdx === 0 ? 'Math Foundation' : phaseIdx === 1 ? 'ML Core Theory' : phaseIdx === 2 ? 'DL Deep Theory' : 'LLM Core Theory'}
+                </span>
+              </div>
+
+              {/* Right Branch - Python/Coding Node (strictly Yellow/Gold when current) */}
+              <div className="path-fork-right">
+                <button
+                  onClick={() => unlocked && handlePythonNodeClick(phase, phaseIdx)}
+                  className={`node-btn yellow ${pythonStatus}`}
+                  aria-label="Python slice"
+                  disabled={!unlocked}
+                >
+                  {renderInsideIcon(pythonStatus, 'topic')}
+                </button>
+                <span className="node-label text-center">
+                  {phaseIdx === 0 ? 'NumPy & Python' : phaseIdx === 1 ? 'ML Scratch Code' : phaseIdx === 2 ? 'PyTorch Basics' : 'GPT Build Code'}
+                </span>
+              </div>
+
+              {/* Bottom Merged Area - Projects & Gates */}
+              <div className="path-center-bottom">
+                {/* Project Node */}
+                {phase.projects.map((pr) => {
+                  const theoryDone = isPhaseTheoryCompleted(phase);
+                  const pythonDone = isPythonSliceCompleted(phase.id);
+                  const prCompleted = isProjectCompleted(pr);
+                  const prStatus = unlocked 
+                    ? (prCompleted ? 'completed' : (theoryDone && pythonDone ? 'current' : 'locked')) 
+                    : 'locked';
+
+                  return (
+                    <div key={pr.id} className="flex flex-col items-center">
+                      <button
+                        onClick={() => unlocked && prStatus !== 'locked' && onNodeClick('project', pr.id, phaseIdx)}
+                        className={`node-btn project-boss ${prStatus}`}
+                        aria-label={pr.ttl}
+                        disabled={prStatus === 'locked'}
+                      >
+                        {renderInsideIcon(prStatus, 'project')}
+                      </button>
+                      <span className="node-label">
+                        Project: {pr.ttl}
+                      </span>
+                    </div>
+                  );
+                })}
+
+                {/* Gate Node */}
+                {(() => {
+                  const prCompleted = phase.projects.every(pr => isProjectCompleted(pr));
+                  const gateDone = isGateCompleted(phase);
+                  const gateStatus = unlocked 
+                    ? (gateDone ? 'completed' : (prCompleted ? 'current' : 'locked')) 
+                    : 'locked';
+
+                  return (
+                    <div className="flex flex-col items-center">
+                      <button
+                        onClick={() => unlocked && gateStatus !== 'locked' && onNodeClick('gate', `gate_${phase.id}`, phaseIdx)}
+                        className={`node-btn gate-boss ${gateStatus}`}
+                        aria-label={phase.gate.title}
+                        disabled={gateStatus === 'locked'}
+                      >
+                        {renderInsideIcon(gateStatus, 'gate')}
+                      </button>
+                      <span className="node-label">
+                        {phase.gate.title}
+                      </span>
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
 
             {/* Resources Panel */}
@@ -415,6 +368,16 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
           </div>
         );
       })}
+
+      {activeTheoryPhase && (
+        <TheoryListModal
+          isOpen={theoryModalOpen}
+          onClose={() => setTheoryModalOpen(false)}
+          phase={activeTheoryPhase}
+          phaseIdx={activeTheoryPhaseIdx}
+          onTopicClick={handleTopicSelect}
+        />
+      )}
     </div>
   );
 };
