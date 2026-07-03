@@ -22,6 +22,7 @@ export interface RoadmapItem {
   search: string;
   keystone?: boolean;
   optional?: boolean;
+  estMinutes?: number; // placeholder planning estimate, optional
 }
 
 export interface RoadmapGroup {
@@ -38,6 +39,7 @@ export interface RoadmapProject {
   build: string[];
   done: string[];
   keystone?: boolean;
+  estMinutes?: number; // placeholder planning estimate, optional
 }
 
 export interface RoadmapGateCriteria {

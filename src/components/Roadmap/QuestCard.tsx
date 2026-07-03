@@ -71,11 +71,13 @@ export const QuestCard: React.FC<QuestCardProps> = ({ onNodeClick, onFocusClick 
   let title = '';
   let body = '';
   let actions: React.ReactNode = null;
+  let estMinutes: number | undefined;
 
   if (task.type === 'topic' && task.topic) {
     const topic = task.topic;
     title = `${topic.id}: ${topic.ttl}`;
     body = topic.learn;
+    estMinutes = topic.estMinutes;
     actions = (
       <>
         <button
@@ -102,6 +104,7 @@ export const QuestCard: React.FC<QuestCardProps> = ({ onNodeClick, onFocusClick 
     const project = task.project;
     title = `Project: ${project.ttl}`;
     body = `Next up: ${project.learn}. Work on this project in the roadmap path or click details to complete steps.`;
+    estMinutes = project.estMinutes;
     actions = (
       <button
         onClick={() => onNodeClick('project', project.id, task.phaseIndex)}
@@ -126,7 +129,12 @@ export const QuestCard: React.FC<QuestCardProps> = ({ onNodeClick, onFocusClick 
 
   return (
     <div className="quest-card">
-      <div className="quest-card-header font-black text-xs">Next Active Quest</div>
+      <div className="quest-card-header font-black text-xs flex items-center justify-between gap-2">
+        <span>Next Active Quest</span>
+        {estMinutes !== undefined && (
+          <span className="quest-card-est text-[var(--text-muted)] font-bold">~{estMinutes} min</span>
+        )}
+      </div>
       <h3 className="quest-card-title text-lg font-black mt-1">{title}</h3>
       <p className="quest-card-body text-sm mt-2 text-[var(--text-muted)] leading-relaxed">{body}</p>
       <div className="quest-card-actions flex gap-2 mt-4 flex-wrap">{actions}</div>

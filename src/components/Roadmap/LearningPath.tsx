@@ -254,6 +254,9 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
                       <span className="node-label">
                         {item.ttl}
                       </span>
+                      {item.estMinutes !== undefined && (
+                        <span className="node-est">~{item.estMinutes} min</span>
+                      )}
                     </div>
                   );
                 })}
@@ -338,6 +341,9 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
                     <span className="node-label">
                       Project: {pr.ttl}
                     </span>
+                    {pr.estMinutes !== undefined && (
+                      <span className="node-est">~{pr.estMinutes} min</span>
+                    )}
                   </div>
                 );
               })}

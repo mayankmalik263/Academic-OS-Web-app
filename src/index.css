@@ -747,6 +747,15 @@ a:hover {
   box-shadow: 0 4px 6px var(--shadow-color);
 }
 
+.node-est {
+  margin-top: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-family: var(--font-mono, monospace);
+  white-space: nowrap;
+}
+
 /* Alternating path winding positions */
 .offset-center { transform: translateX(0); }
 .offset-right-1 { transform: translateX(45px); }

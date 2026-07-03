@@ -1,6 +1,19 @@
 import type { RoadmapPhase } from '../types/roadmap';
 
-export const roadmap: RoadmapPhase[] = [
+// PLACEHOLDER time-estimate heuristic (NOT tuned per-topic, review before trusting):
+//   normal concept node   = 15 min
+//   keystone concept node = 25 min
+//   normal project        = 45 min
+//   keystone project      = 90 min
+// Applied by fillEstMinutes() below to any RoadmapItem/RoadmapProject that does not
+// already define estMinutes. To override a single node with a real estimate, add
+// `estMinutes: N` directly to that object literal and it will be left untouched.
+const EST_CONCEPT = 15;
+const EST_CONCEPT_KEYSTONE = 25;
+const EST_PROJECT = 45;
+const EST_PROJECT_KEYSTONE = 90;
+
+const rawRoadmap: RoadmapPhase[] = [
   {
     id: "p0",
     name: "Phase 0 - Math Base",
@@ -488,3 +501,25 @@ export const roadmap: RoadmapPhase[] = [
     }
   }
 ];
+
+// Fill placeholder estMinutes on every concept item and project using the heuristic
+// above, leaving any node that already set estMinutes explicitly untouched.
+function fillEstMinutes(phases: RoadmapPhase[]): RoadmapPhase[] {
+  phases.forEach(phase => {
+    phase.groups.forEach(group => {
+      group.items.forEach(item => {
+        if (item.estMinutes === undefined) {
+          item.estMinutes = item.keystone ? EST_CONCEPT_KEYSTONE : EST_CONCEPT;
+        }
+      });
+    });
+    phase.projects.forEach(project => {
+      if (project.estMinutes === undefined) {
+        project.estMinutes = project.keystone ? EST_PROJECT_KEYSTONE : EST_PROJECT;
+      }
+    });
+  });
+  return phases;
+}
+
+export const roadmap: RoadmapPhase[] = fillEstMinutes(rawRoadmap);
