@@ -3,6 +3,7 @@ import { useAuth, AuthProvider } from './context/AuthContext';
 import { useAudio } from './hooks/useAudio';
 import { triggerConfetti } from './components/Common/Confetti';
 import { roadmap } from './data/roadmapData';
+import { pythonSubsteps } from './data/pythonSliceData';
 import type { RoadmapItem, RoadmapProject, RoadmapPhase } from './types/roadmap';
 
 // Layout
@@ -347,16 +348,12 @@ const AppContent: React.FC = () => {
 
     if (type === 'topic') {
       if (id.startsWith('pyslice_')) {
-        const phaseId = id.replace('pyslice_', '');
-        const targetPhase = roadmap.find(p => p.id === phaseId) || phase;
-        const syntheticTopic: RoadmapItem = {
-          id: id,
-          ttl: `${targetPhase.name.replace(/^Phase \d+ - /, "")} - Coding Slice`,
-          learn: targetPhase.pyslice || 'Core programming syntax, logic loops, and framework integrations.',
-          skip: "Heavy libraries, wrapper code, premature optimizations. Keep it code-first.",
-          search: `python programming data analysis tutorial`
-        };
-        setActiveLesson(syntheticTopic);
+        const pKey = phase.id;
+        const list = pythonSubsteps[pKey] || [];
+        const topic = list.find(item => item.id === id);
+        if (topic) {
+          setActiveLesson(topic);
+        }
         return;
       }
 

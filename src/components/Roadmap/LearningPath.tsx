@@ -2,13 +2,25 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useAudio } from '../../hooks/useAudio';
 import { roadmap } from '../../data/roadmapData';
+import { pythonSubsteps } from '../../data/pythonSliceData';
 import type { RoadmapPhase, RoadmapItem, RoadmapProject } from '../../types/roadmap';
 import { SVG_ICONS } from '../Common/Assets';
-import { TheoryListModal } from '../Modals/TheoryListModal';
 
 interface LearningPathProps {
   onNodeClick: (type: 'topic' | 'project' | 'gate', id: string, phaseIndex: number) => void;
 }
+
+// Subtle alternating offsets for Duolingo-style winding column
+const columnOffsets = [
+  "translate-x-0",
+  "translate-x-3",
+  "translate-x-6",
+  "translate-x-3",
+  "translate-x-0",
+  "-translate-x-3",
+  "-translate-x-6",
+  "-translate-x-3"
+];
 
 export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
   const { progress } = useAuth();
@@ -17,31 +29,9 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
   // Expanded resources panel accordion
   const [expandedDetails, setExpandedDetails] = useState<Record<string, boolean>>({});
 
-  // Local state for the Theory checklist popup modal
-  const [theoryModalOpen, setTheoryModalOpen] = useState(false);
-  const [activeTheoryPhase, setActiveTheoryPhase] = useState<RoadmapPhase | null>(null);
-  const [activeTheoryPhaseIdx, setActiveTheoryPhaseIdx] = useState<number>(0);
-
   const toggleDetails = (phaseId: string) => {
     playSound('click');
     setExpandedDetails(prev => ({ ...prev, [phaseId]: !prev[phaseId] }));
-  };
-
-  const handleTheoryNodeClick = (phase: RoadmapPhase, idx: number) => {
-    playSound('click');
-    setActiveTheoryPhase(phase);
-    setActiveTheoryPhaseIdx(idx);
-    setTheoryModalOpen(true);
-  };
-
-  const handlePythonNodeClick = (phase: RoadmapPhase, idx: number) => {
-    playSound('click');
-    onNodeClick('topic', `pyslice_${phase.id}`, idx);
-  };
-
-  const handleTopicSelect = (topic: RoadmapItem) => {
-    // Forward the select event to the parent AppContent container
-    onNodeClick('topic', `t_${topic.id}`, activeTheoryPhaseIdx);
   };
 
   // Helper to determine if a phase is unlocked
@@ -49,16 +39,6 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
     if (phaseIndex === 0) return true;
     const prevPhase = roadmap[phaseIndex - 1];
     return prevPhase.gate.criteria.every(c => progress[`gate_${c.id}`]);
-  };
-
-  // Helper to check if the theory/math topics are completed
-  const isPhaseTheoryCompleted = (phase: RoadmapPhase) => {
-    return phase.groups.every(g => g.items.every(t => progress[`t_${t.id}`]));
-  };
-
-  // Helper to check if the Python slice is completed
-  const isPythonSliceCompleted = (phaseId: string) => {
-    return !!progress[`pyslice_${phaseId}`];
   };
 
   // Helper to check if a project is completed
@@ -69,16 +49,13 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
     return [...paperIDs, ...buildIDs, ...doneIDs].every(id => progress[id]);
   };
 
-  // Helper to check if a gate is completed
-  const isGateCompleted = (phase: RoadmapPhase) => {
-    return phase.gate.criteria.every(c => progress[`gate_${c.id}`]);
-  };
 
   // Helper to calculate progress percentage for a phase
   const calculatePhaseProgress = (phase: RoadmapPhase) => {
     let totalItems = 0;
     let completedItems = 0;
 
+    // 1. Math/Theory items
     phase.groups.forEach(g => {
       g.items.forEach(t => {
         totalItems++;
@@ -86,10 +63,14 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
       });
     });
 
-    // Add 1 slot for the Python slice itself
-    totalItems++;
-    if (progress[`pyslice_${phase.id}`]) completedItems++;
+    // 2. Python items
+    const pyList = pythonSubsteps[phase.id] || [];
+    pyList.forEach(t => {
+      totalItems++;
+      if (progress[t.id]) completedItems++;
+    });
 
+    // 3. Projects
     phase.projects.forEach(pr => {
       pr.paper.forEach((_, i) => {
         totalItems++;
@@ -105,6 +86,7 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
       });
     });
 
+    // 4. Gates
     phase.gate.criteria.forEach(c => {
       totalItems++;
       if (progress[`gate_${c.id}`]) completedItems++;
@@ -147,8 +129,16 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
         const pct = calculatePhaseProgress(phase);
         const bannerColor = phaseIdx === 0 ? "var(--color-blue)" : phaseIdx === 1 ? "var(--color-green)" : phaseIdx === 2 ? "var(--color-purple)" : "var(--color-orange)";
 
-        const theoryStatus = unlocked ? (isPhaseTheoryCompleted(phase) ? 'completed' : 'current') : 'locked';
-        const pythonStatus = unlocked ? (isPythonSliceCompleted(phase.id) ? 'completed' : 'current') : 'locked';
+        // Flatten all theory items inside the phase
+        const theoryItems: RoadmapItem[] = [];
+        phase.groups.forEach(g => {
+          g.items.forEach(t => {
+            theoryItems.push(t);
+          });
+        });
+
+        // Get Python items for this phase
+        const pythonItems = pythonSubsteps[phase.id] || [];
 
         return (
           <div key={phase.id} className="unit-container" id={`phase-banner-${phaseIdx}`}>
@@ -169,113 +159,132 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
               </div>
             </div>
 
-            {/* Split Fork Learning Path */}
+            {/* Parallel Fully Expanded Tracks */}
             <div 
-              className="path-fork-container fork-spacing" 
+              className="flex gap-8 md:gap-16 justify-center items-start my-8 px-2 max-w-xl mx-auto relative"
               style={{ opacity: unlocked ? 1 : 0.5, filter: unlocked ? 'none' : 'grayscale(1)' }}
             >
-              {/* Triangular fork path lines */}
-              <svg className="path-fork-svg" viewBox="0 0 320 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-                {/* Left path (Theory) */}
-                <line x1="160" y1="10" x2="65" y2="105" stroke="var(--border-color)" strokeWidth="6" strokeLinecap="round" />
-                {/* Right path (Python Coding) */}
-                <line x1="160" y1="10" x2="255" y2="105" stroke="var(--border-color)" strokeWidth="6" strokeLinecap="round" />
-                {/* Left bottom path (Theory merge) */}
-                <line x1="65" y1="105" x2="160" y2="200" stroke="var(--border-color)" strokeWidth="6" strokeLinecap="round" />
-                {/* Right bottom path (Python merge) */}
-                <line x1="255" y1="105" x2="160" y2="200" stroke="var(--border-color)" strokeWidth="6" strokeLinecap="round" />
-              </svg>
-
-              {/* Top connector dot */}
-              <div className="path-center-top"></div>
-
-              {/* Left Branch - Theory Node */}
-              <div className="path-fork-left">
-                <button
-                  onClick={() => unlocked && handleTheoryNodeClick(phase, phaseIdx)}
-                  className={`node-btn ${theoryStatus}`}
-                  aria-label="Theory Topics"
-                  disabled={!unlocked}
-                >
-                  {renderInsideIcon(theoryStatus, 'topic')}
-                </button>
-                <span className="node-label">
-                  {phaseIdx === 0 ? 'Math Foundation' : phaseIdx === 1 ? 'ML Core Theory' : phaseIdx === 2 ? 'DL Deep Theory' : 'LLM Core Theory'}
-                </span>
-              </div>
-
-              {/* Right Branch - Python/Coding Node (strictly Yellow/Gold when current) */}
-              <div className="path-fork-right">
-                <button
-                  onClick={() => unlocked && handlePythonNodeClick(phase, phaseIdx)}
-                  className={`node-btn yellow ${pythonStatus}`}
-                  aria-label="Python slice"
-                  disabled={!unlocked}
-                >
-                  {renderInsideIcon(pythonStatus, 'topic')}
-                </button>
-                <span className="node-label text-center">
-                  {phaseIdx === 0 ? 'NumPy & Python' : phaseIdx === 1 ? 'ML Scratch Code' : phaseIdx === 2 ? 'PyTorch Basics' : 'GPT Build Code'}
-                </span>
-              </div>
-
-              {/* Bottom Merged Area - Projects & Gates */}
-              <div className="path-center-bottom">
-                {/* Project Node */}
-                {phase.projects.map((pr) => {
-                  const theoryDone = isPhaseTheoryCompleted(phase);
-                  const pythonDone = isPythonSliceCompleted(phase.id);
-                  const prCompleted = isProjectCompleted(pr);
-                  const prStatus = unlocked 
-                    ? (prCompleted ? 'completed' : (theoryDone && pythonDone ? 'current' : 'locked')) 
-                    : 'locked';
+              {/* Left Column: Math & Theory */}
+              <div className="flex-1 flex flex-col items-center gap-7 border-r border-[var(--border-color)] pr-4 md:pr-8">
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-[var(--text-faint)] mb-2 border-b border-[var(--border-color)] pb-1.5 w-full text-center">
+                  Theory Core
+                </h3>
+                
+                {theoryItems.map((item, idx) => {
+                  const checkId = `t_${item.id}`;
+                  const isCompleted = !!progress[checkId];
+                  const isCurrent = unlocked && !isCompleted && theoryItems.slice(0, idx).every(prev => progress[`t_${prev.id}`]);
+                  const status = isCompleted ? 'completed' : (isCurrent ? 'current' : 'locked');
+                  const offsetClass = columnOffsets[idx % columnOffsets.length];
 
                   return (
-                    <div key={pr.id} className="flex flex-col items-center">
+                    <div key={item.id} className={`node-wrapper ${offsetClass} transition-all duration-200`}>
                       <button
-                        onClick={() => unlocked && prStatus !== 'locked' && onNodeClick('project', pr.id, phaseIdx)}
-                        className={`node-btn project-boss ${prStatus}`}
-                        aria-label={pr.ttl}
-                        disabled={prStatus === 'locked'}
+                        onClick={() => unlocked && onNodeClick('topic', checkId, phaseIdx)}
+                        className={`node-btn ${status}`}
+                        disabled={!unlocked || status === 'locked'}
+                        aria-label={item.ttl}
                       >
-                        {renderInsideIcon(prStatus, 'project')}
+                        {renderInsideIcon(status, 'topic')}
                       </button>
                       <span className="node-label">
-                        Project: {pr.ttl}
+                        {item.ttl}
                       </span>
                     </div>
                   );
                 })}
+              </div>
 
-                {/* Gate Node */}
-                {(() => {
-                  const prCompleted = phase.projects.every(pr => isProjectCompleted(pr));
-                  const gateDone = isGateCompleted(phase);
-                  const gateStatus = unlocked 
-                    ? (gateDone ? 'completed' : (prCompleted ? 'current' : 'locked')) 
-                    : 'locked';
+              {/* Right Column: Python Coding */}
+              <div className="flex-1 flex flex-col items-center gap-7 pl-4 md:pl-8">
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-[var(--color-gold)] mb-2 border-b border-[var(--border-color)] pb-1.5 w-full text-center">
+                  Python Coding
+                </h3>
+
+                {pythonItems.map((item, idx) => {
+                  const isCompleted = !!progress[item.id];
+                  const isCurrent = unlocked && !isCompleted && pythonItems.slice(0, idx).every(prev => progress[prev.id]);
+                  const status = isCompleted ? 'completed' : (isCurrent ? 'current' : 'locked');
+                  const offsetClass = columnOffsets[idx % columnOffsets.length];
 
                   return (
-                    <div className="flex flex-col items-center">
+                    <div key={item.id} className={`node-wrapper ${offsetClass} transition-all duration-200`}>
                       <button
-                        onClick={() => unlocked && gateStatus !== 'locked' && onNodeClick('gate', `gate_${phase.id}`, phaseIdx)}
-                        className={`node-btn gate-boss ${gateStatus}`}
-                        aria-label={phase.gate.title}
-                        disabled={gateStatus === 'locked'}
+                        onClick={() => unlocked && onNodeClick('topic', item.id, phaseIdx)}
+                        className={`node-btn yellow ${status}`}
+                        disabled={!unlocked || status === 'locked'}
+                        aria-label={item.ttl}
                       >
-                        {renderInsideIcon(gateStatus, 'gate')}
+                        {renderInsideIcon(status, 'topic')}
                       </button>
                       <span className="node-label">
-                        {phase.gate.title}
+                        {item.ttl}
                       </span>
                     </div>
                   );
-                })()}
+                })}
               </div>
             </div>
 
+            {/* Reconnect Center Area - Projects & Gates */}
+            <div 
+              className="flex flex-col items-center gap-7 border-t border-[var(--border-color)] pt-8 max-w-sm mx-auto my-6"
+              style={{ opacity: unlocked ? 1 : 0.5, filter: unlocked ? 'none' : 'grayscale(1)' }}
+            >
+              {/* Project Node */}
+              {phase.projects.map((pr) => {
+                const theoryDone = phase.groups.every(g => g.items.every(t => progress[`t_${t.id}`]));
+                const pythonDone = pythonItems.every(t => progress[t.id]);
+                const prCompleted = isProjectCompleted(pr);
+                const prStatus = unlocked 
+                  ? (prCompleted ? 'completed' : (theoryDone && pythonDone ? 'current' : 'locked')) 
+                  : 'locked';
+
+                return (
+                  <div key={pr.id} className="flex flex-col items-center">
+                    <button
+                      onClick={() => unlocked && prStatus !== 'locked' && onNodeClick('project', pr.id, phaseIdx)}
+                      className={`node-btn project-boss ${prStatus}`}
+                      aria-label={pr.ttl}
+                      disabled={prStatus === 'locked'}
+                    >
+                      {renderInsideIcon(prStatus, 'project')}
+                    </button>
+                    <span className="node-label">
+                      Project: {pr.ttl}
+                    </span>
+                  </div>
+                );
+              })}
+
+              {/* Gate Node */}
+              {(() => {
+                const prCompleted = phase.projects.every(pr => isProjectCompleted(pr));
+                const gateDone = phase.gate.criteria.every(c => progress[`gate_${c.id}`]);
+                const gateStatus = unlocked 
+                  ? (gateDone ? 'completed' : (prCompleted ? 'current' : 'locked')) 
+                  : 'locked';
+
+                return (
+                  <div className="flex flex-col items-center">
+                    <button
+                      onClick={() => unlocked && gateStatus !== 'locked' && onNodeClick('gate', `gate_${phase.id}`, phaseIdx)}
+                      className={`node-btn gate-boss ${gateStatus}`}
+                      aria-label={phase.gate.title}
+                      disabled={gateStatus === 'locked'}
+                    >
+                      {renderInsideIcon(gateStatus, 'gate')}
+                    </button>
+                    <span className="node-label">
+                      {phase.gate.title}
+                    </span>
+                  </div>
+                );
+              })()}
+            </div>
+
             {/* Resources Panel */}
-            <div className="resources-panel text-left">
+            <div className="resources-panel text-left mt-8">
               <div className="resources-title">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="var(--color-green)">
                   <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/>
@@ -368,16 +377,8 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
           </div>
         );
       })}
-
-      {activeTheoryPhase && (
-        <TheoryListModal
-          isOpen={theoryModalOpen}
-          onClose={() => setTheoryModalOpen(false)}
-          phase={activeTheoryPhase}
-          phaseIdx={activeTheoryPhaseIdx}
-          onTopicClick={handleTopicSelect}
-        />
-      )}
     </div>
   );
 };
+
+
