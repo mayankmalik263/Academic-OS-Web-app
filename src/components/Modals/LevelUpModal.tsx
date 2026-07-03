@@ -1,6 +1,5 @@
 import React from 'react';
 import { useAudio } from '../../hooks/useAudio';
-import { SVG_MASCOT } from '../Common/Assets';
 
 interface LevelUpModalProps {
   isOpen: boolean;
@@ -39,7 +38,7 @@ export const LevelUpModal: React.FC<LevelUpModalProps> = ({
       >
         {/* Mascot Celebrating */}
         <div className="mb-2">
-          {SVG_MASCOT.celebrating(100, 100)}
+          <img src="/logo.png" alt="Mascot Celebrating" className="w-[100px] h-[100px] object-contain mx-auto animate-bounce" />
         </div>
 
         {type === 'level' ? (

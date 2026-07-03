@@ -29,7 +29,7 @@ import { LevelUpModal } from './components/Modals/LevelUpModal';
 import { FocusOverlay } from './components/Modals/FocusOverlay';
 import { StatsModal } from './components/Modals/StatsModal';
 import { Toast } from './components/Common/Toast';
-import { SVG_MASCOT, ACHIEVEMENTS_DEF } from './components/Common/Assets';
+import { ACHIEVEMENTS_DEF } from './components/Common/Assets';
 
 const getRankName = (level: number) => {
   if (level >= 8) return "AI Architect";
@@ -466,7 +466,7 @@ const AppContent: React.FC = () => {
       {/* Mobile HUD Header */}
       <header className="mobile-hud">
         <div className="flex items-center gap-2">
-          {SVG_MASCOT.happy(36, 36)}
+          <img src="/logo.png" alt="Mascot" className="w-[36px] h-[36px] object-contain rounded-lg" />
           <h1 className="brand-title text-sm">ZERO TO AI</h1>
         </div>
         <HUD 

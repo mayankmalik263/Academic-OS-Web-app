@@ -2,7 +2,6 @@ import React from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useAudio } from '../../hooks/useAudio';
 import { roadmap } from '../../data/roadmapData';
-import { SVG_MASCOT } from '../Common/Assets';
 
 interface SidebarProps {
   activeTab: string;
@@ -14,8 +13,8 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   setActiveTab,
-  pomoRunning,
-  pomoMode
+  pomoRunning: _pomoRunning,
+  pomoMode: _pomoMode
 }) => {
   const { progress } = useAuth();
   const { playSound, muted: audioMuted, toggleMute } = useAudio();
@@ -84,21 +83,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }, 100);
   };
 
-  // Mascot mood based on Pomodoro state
-  const getMascotMood = () => {
-    if (pomoRunning) {
-      return pomoMode === 'focus' ? 'studying' : 'sleeping';
-    }
-    const allDone = roadmap.every((_, idx) => calculatePhaseProgress(idx) === 100);
-    return allDone ? 'celebrating' : 'happy';
-  };
-
   return (
     <aside className="left-sidebar">
       {/* Brand logo & Mascot */}
       <div className="brand-container">
         <div className="brand-logo">
-          {SVG_MASCOT[getMascotMood()](44, 44)}
+          <img src="/logo.png" alt="Mascot Logo" className="w-[44px] h-[44px] object-contain rounded-xl" />
         </div>
         <div>
           <h1 className="brand-title">ZERO TO AI</h1>
