@@ -14,6 +14,7 @@ interface AuthContextProps {
   consumedFreezeDates: string[];
   achievements: string[];
   brainDump: string;
+  lastSyncedAt: Date | null;
   signOut: () => Promise<void>;
   refreshUserData: () => Promise<void>;
   toggleProgress: (checkId: string, value: boolean) => Promise<void>;
@@ -40,6 +41,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [consumedFreezeDates, setConsumedFreezeDates] = useState<string[]>([]);
   const [achievements, setAchievements] = useState<string[]>([]);
   const [brainDump, setBrainDump] = useState<string>('');
+  // Client-side "last synced" marker. Only advanced after a confirmed successful
+  // Supabase write (see markSynced usage), so the sidebar indicator never lies.
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
 
   const clearState = () => {
     setProfile(null);
@@ -49,6 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setConsumedFreezeDates([]);
     setAchievements([]);
     setBrainDump('');
+    setLastSyncedAt(null);
   };
 
   const refreshUserData = async () => {
@@ -226,25 +231,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user) return;
     
     try {
+      let error;
       if (value) {
-        await supabase
+        ({ error } = await supabase
           .from('progress')
-          .upsert({ user_id: user.id, check_id: checkId, state: true });
-        
+          .upsert({ user_id: user.id, check_id: checkId, state: true }));
+
         // Update local state immediately for snappy UX
         setProgress(prev => ({ ...prev, [checkId]: true }));
       } else {
-        await supabase
+        ({ error } = await supabase
           .from('progress')
           .delete()
-          .match({ user_id: user.id, check_id: checkId });
-        
+          .match({ user_id: user.id, check_id: checkId }));
+
         setProgress(prev => {
           const next = { ...prev };
           delete next[checkId];
           return next;
         });
       }
+      if (!error) setLastSyncedAt(new Date());
     } catch (e) {
       console.error('Error toggling progress:', e);
     }
@@ -254,11 +261,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user || activityDates.includes(dateStr)) return;
     
     try {
-      await supabase
+      const { error } = await supabase
         .from('activity')
         .upsert({ user_id: user.id, activity_date: dateStr });
-      
+
       setActivityDates(prev => [...prev, dateStr]);
+      if (!error) setLastSyncedAt(new Date());
     } catch (e) {
       console.error('Error logging activity date:', e);
     }
@@ -270,13 +278,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const newStats = { ...stats, ...updates };
       delete (newStats as any).user_id; // prevent primary key update issues
-      
-      await supabase
+
+      const { error } = await supabase
         .from('stats')
         .update(newStats)
         .eq('user_id', user.id);
-      
+
       setStats(prev => prev ? { ...prev, ...updates } : null);
+      if (!error) setLastSyncedAt(new Date());
     } catch (e) {
       console.error('Error updating stats:', e);
     }
@@ -286,11 +295,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user) return;
     
     try {
-      await supabase
+      const { error } = await supabase
         .from('brain_dump')
         .upsert({ user_id: user.id, content });
-      
+
       setBrainDump(content);
+      if (!error) setLastSyncedAt(new Date());
     } catch (e) {
       console.error('Error saving brain dump:', e);
     }
@@ -300,11 +310,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user || achievements.includes(achievementId)) return;
     
     try {
-      await supabase
+      const { error } = await supabase
         .from('achievements')
         .upsert({ user_id: user.id, achievement_id: achievementId });
-      
+
       setAchievements(prev => [...prev, achievementId]);
+      if (!error) setLastSyncedAt(new Date());
     } catch (e) {
       console.error('Error unlocking achievement:', e);
     }
@@ -314,11 +325,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user || consumedFreezeDates.includes(dateStr)) return;
     
     try {
-      await supabase
+      const { error } = await supabase
         .from('consumed_freezes')
         .upsert({ user_id: user.id, freeze_date: dateStr });
-      
+
       setConsumedFreezeDates(prev => [...prev, dateStr]);
+      if (!error) setLastSyncedAt(new Date());
     } catch (e) {
       console.error('Error recording consumed freeze:', e);
     }
@@ -441,6 +453,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         consumedFreezeDates,
         achievements,
         brainDump,
+        lastSyncedAt,
         signOut,
         refreshUserData,
         toggleProgress,

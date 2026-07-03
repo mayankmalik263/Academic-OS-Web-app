@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useAudio } from '../../hooks/useAudio';
 import { roadmap } from '../../data/roadmapData';
@@ -10,14 +10,36 @@ interface SidebarProps {
   pomoMode: 'focus' | 'break';
 }
 
+// Lightweight relative-time formatter (no dependency). Returns strings like
+// "just now", "2 min ago", "1 hr ago". Anything a day or older falls back to a date.
+const formatSyncTime = (date: Date | null): string => {
+  if (!date) return 'Not synced yet';
+  const secs = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (secs < 10) return 'just now';
+  if (secs < 60) return `${secs} sec ago`;
+  const mins = Math.floor(secs / 60);
+  if (mins < 60) return `${mins} min ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs} hr${hrs === 1 ? '' : 's'} ago`;
+  return date.toLocaleDateString();
+};
+
 export const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   setActiveTab,
   pomoRunning: _pomoRunning,
   pomoMode: _pomoMode
 }) => {
-  const { progress } = useAuth();
+  const { progress, lastSyncedAt } = useAuth();
   const { playSound, muted: audioMuted, toggleMute } = useAudio();
+
+  // Re-render on a timer so the relative "last synced" label keeps advancing
+  // even when no writes happen. 30s cadence is fine for min/hr granularity.
+  const [, forceTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => forceTick(t => t + 1), 30000);
+    return () => clearInterval(id);
+  }, []);
 
 
 
@@ -93,6 +115,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div>
           <h1 className="brand-title">ZERO TO AI</h1>
           <div className="brand-subtitle">COMMAND DECK</div>
+          {lastSyncedAt && (
+            <div className="sync-indicator" title={`Last saved to cloud: ${lastSyncedAt.toLocaleString()}`}>
+              Synced {formatSyncTime(lastSyncedAt)}
+            </div>
+          )}
         </div>
       </div>
 
