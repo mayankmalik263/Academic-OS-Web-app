@@ -49,7 +49,6 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
     return [...paperIDs, ...buildIDs, ...doneIDs].every(id => progress[id]);
   };
 
-
   // Helper to calculate progress percentage for a phase
   const calculatePhaseProgress = (phase: RoadmapPhase) => {
     let totalItems = 0;
@@ -122,6 +121,61 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
     );
   };
 
+  // Helper to render connection lines between circles inside a column
+  const renderColumnLines = (items: any[], isCompletedCheck: (id: string) => boolean) => {
+    if (items.length <= 1) return null;
+    const centerX = 80;
+    const startY = 36;
+    const spacingY = 130;
+
+    const getCoords = (i: number) => {
+      const idx = i % 8;
+      let offsetX = 0;
+      if (idx === 0) offsetX = 0;
+      else if (idx === 1) offsetX = 12;
+      else if (idx === 2) offsetX = 24;
+      else if (idx === 3) offsetX = 12;
+      else if (idx === 4) offsetX = 0;
+      else if (idx === 5) offsetX = -12;
+      else if (idx === 6) offsetX = -24;
+      else if (idx === 7) offsetX = -12;
+      return {
+        x: centerX + offsetX,
+        y: startY + (i * spacingY)
+      };
+    };
+
+    const segments: React.ReactNode[] = [];
+    for (let i = 0; i < items.length - 1; i++) {
+      const p1 = getCoords(i);
+      const p2 = getCoords(i + 1);
+      
+      const segmentDone = isCompletedCheck(items[i].id) && isCompletedCheck(items[i + 1].id);
+      const strokeColor = segmentDone 
+        ? "var(--color-green)" 
+        : "var(--border-color)";
+
+      segments.push(
+        <line
+          key={i}
+          x1={p1.x}
+          y1={p1.y}
+          x2={p2.x}
+          y2={p2.y}
+          stroke={strokeColor}
+          strokeWidth="6"
+          strokeLinecap="round"
+        />
+      );
+    }
+
+    return (
+      <svg className="absolute top-0 left-0 w-full h-full pointer-events-none z-0 overflow-visible">
+        {segments}
+      </svg>
+    );
+  };
+
   return (
     <div className="w-full">
       {roadmap.map((phase, phaseIdx) => {
@@ -165,64 +219,80 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
               style={{ opacity: unlocked ? 1 : 0.5, filter: unlocked ? 'none' : 'grayscale(1)' }}
             >
               {/* Left Column: Math & Theory */}
-              <div className="flex-1 flex flex-col items-center gap-7 border-r border-[var(--border-color)] pr-4 md:pr-8">
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-[var(--text-faint)] mb-2 border-b border-[var(--border-color)] pb-1.5 w-full text-center">
+              <div className="flex-1 flex flex-col items-center">
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-[var(--text-faint)] mb-4 border-b border-[var(--border-color)] pb-1.5 w-full text-center">
                   Theory Core
                 </h3>
                 
-                {theoryItems.map((item, idx) => {
-                  const checkId = `t_${item.id}`;
-                  const isCompleted = !!progress[checkId];
-                  const isCurrent = unlocked && !isCompleted && theoryItems.slice(0, idx).every(prev => progress[`t_${prev.id}`]);
-                  const status = isCompleted ? 'completed' : (isCurrent ? 'current' : 'locked');
-                  const offsetClass = columnOffsets[idx % columnOffsets.length];
+                {/* Winding list of nodes with SVG background lines */}
+                <div className="relative w-[160px] flex flex-col items-center gap-7">
+                  {renderColumnLines(
+                    theoryItems.map(item => ({ id: `t_${item.id}` })), 
+                    (id) => !!progress[id]
+                  )}
+                  
+                  {theoryItems.map((item, idx) => {
+                    const checkId = `t_${item.id}`;
+                    const isCompleted = !!progress[checkId];
+                    const isCurrent = unlocked && !isCompleted && theoryItems.slice(0, idx).every(prev => progress[`t_${prev.id}`]);
+                    const status = isCompleted ? 'completed' : (isCurrent ? 'current' : 'locked');
+                    const offsetClass = columnOffsets[idx % columnOffsets.length];
 
-                  return (
-                    <div key={item.id} className={`node-wrapper ${offsetClass} transition-all duration-200`}>
-                      <button
-                        onClick={() => unlocked && onNodeClick('topic', checkId, phaseIdx)}
-                        className={`node-btn ${status}`}
-                        disabled={!unlocked || status === 'locked'}
-                        aria-label={item.ttl}
-                      >
-                        {renderInsideIcon(status, 'topic')}
-                      </button>
-                      <span className="node-label">
-                        {item.ttl}
-                      </span>
-                    </div>
-                  );
-                })}
+                    return (
+                      <div key={item.id} className={`node-wrapper ${offsetClass} transition-all duration-200 z-10`}>
+                        <button
+                          onClick={() => unlocked && onNodeClick('topic', checkId, phaseIdx)}
+                          className={`node-btn ${status}`}
+                          disabled={!unlocked || status === 'locked'}
+                          aria-label={item.ttl}
+                        >
+                          {renderInsideIcon(status, 'topic')}
+                        </button>
+                        <span className="node-label">
+                          {item.ttl}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Right Column: Python Coding */}
-              <div className="flex-1 flex flex-col items-center gap-7 pl-4 md:pl-8">
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-[var(--color-gold)] mb-2 border-b border-[var(--border-color)] pb-1.5 w-full text-center">
+              <div className="flex-1 flex flex-col items-center">
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-[var(--color-gold)] mb-4 border-b border-[var(--border-color)] pb-1.5 w-full text-center">
                   Python Coding
                 </h3>
 
-                {pythonItems.map((item, idx) => {
-                  const isCompleted = !!progress[item.id];
-                  const isCurrent = unlocked && !isCompleted && pythonItems.slice(0, idx).every(prev => progress[prev.id]);
-                  const status = isCompleted ? 'completed' : (isCurrent ? 'current' : 'locked');
-                  const offsetClass = columnOffsets[idx % columnOffsets.length];
+                {/* Winding list of nodes with SVG background lines */}
+                <div className="relative w-[160px] flex flex-col items-center gap-7">
+                  {renderColumnLines(
+                    pythonItems.map(item => ({ id: item.id })), 
+                    (id) => !!progress[id]
+                  )}
 
-                  return (
-                    <div key={item.id} className={`node-wrapper ${offsetClass} transition-all duration-200`}>
-                      <button
-                        onClick={() => unlocked && onNodeClick('topic', item.id, phaseIdx)}
-                        className={`node-btn yellow ${status}`}
-                        disabled={!unlocked || status === 'locked'}
-                        aria-label={item.ttl}
-                      >
-                        {renderInsideIcon(status, 'topic')}
-                      </button>
-                      <span className="node-label">
-                        {item.ttl}
-                      </span>
-                    </div>
-                  );
-                })}
+                  {pythonItems.map((item, idx) => {
+                    const isCompleted = !!progress[item.id];
+                    const isCurrent = unlocked && !isCompleted && pythonItems.slice(0, idx).every(prev => progress[prev.id]);
+                    const status = isCompleted ? 'completed' : (isCurrent ? 'current' : 'locked');
+                    const offsetClass = columnOffsets[idx % columnOffsets.length];
+
+                    return (
+                      <div key={item.id} className={`node-wrapper ${offsetClass} transition-all duration-200 z-10`}>
+                        <button
+                          onClick={() => unlocked && onNodeClick('topic', item.id, phaseIdx)}
+                          className={`node-btn yellow ${status}`}
+                          disabled={!unlocked || status === 'locked'}
+                          aria-label={item.ttl}
+                        >
+                          {renderInsideIcon(status, 'topic')}
+                        </button>
+                        <span className="node-label">
+                          {item.ttl}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
@@ -380,5 +450,3 @@ export const LearningPath: React.FC<LearningPathProps> = ({ onNodeClick }) => {
     </div>
   );
 };
-
-
