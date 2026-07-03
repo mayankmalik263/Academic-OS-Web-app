@@ -1695,6 +1695,11 @@ a:hover {
 
 /* ---------- Media Queries for Tablet/Mobile ---------- */
 @media (max-width: 992px) {
+  /* Stack children in normal block flow so the mobile HUD is a full-width top
+     bar instead of a flex column beside the main content. */
+  .app-container {
+    display: block;
+  }
   .left-sidebar {
     display: none;
   }
@@ -1710,6 +1715,40 @@ a:hover {
   .main-content {
     padding: 24px 16px 110px;
     max-width: 100%;
+    min-height: 0;
+  }
+
+  /* Mobile top bar: brand on row 1, all HUD widgets spread across row 2.
+     Everything stays visible, just laid out as tidy rows instead of a cramped
+     column. */
+  .mobile-hud {
+    flex-wrap: wrap;
+    gap: 10px 12px;
+    padding: 10px 14px;
+  }
+  .mobile-hud .brand-title {
+    font-size: 15px;
+    white-space: nowrap;
+  }
+  .mobile-hud .hud-widgets {
+    flex-basis: 100%;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .mobile-hud .hud-widget {
+    font-size: 12px;
+    padding: 5px 9px;
+    gap: 4px;
+  }
+  .mobile-hud .hud-widget svg {
+    width: 15px;
+    height: 15px;
+  }
+  .mobile-hud .hud-profile-name {
+    max-width: 90px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
