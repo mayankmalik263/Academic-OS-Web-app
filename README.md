@@ -1,84 +1,119 @@
-# Zero to Modern AI — Gamified Learning Platform
+# 🚀 Zero to Modern AI
 
-A real, multi-user, deployable learning platform converted from the gamified Command Deck HTML tracker. It is built on React + Vite + TypeScript + Tailwind CSS and powered by Supabase (Auth, database, and Row-Level Security).
+<p align="center">
+  <strong>A gamified, multi-user learning platform built to master modern AI concepts.</strong>
+</p>
 
-## Features
-- **DataCamp × Duolingo UI**: Premium light/dark theme aesthetics with responsive navigation sidebars and 3D buttons.
-- **Supabase Cloud Sync**: Email/password authentication and Google OAuth sign-in. All stats (XP, level, streaks, freezes) and progress checkpoints are isolated per user via Row-Level Security (RLS).
-- **Offline Data Migration**: On first login, the platform detects legacy offline progress data (`zeroToModernAI_v2`) and offers a one-click cloud import helper so users don't lose their data.
-- **Gamified Path Engine**: Dynamic rendering of winding paths, JIT evaluation checkpoints, optional sidequests (Naive Bayes, PCA, k-means), project bosses, and gates.
-- **Audio Synthesizer**: Custom synthesized audio effects using browser AudioContext oscillators.
-- **Workspace Utilities**: Integrated Pomodoro clock and auto-saving Brain Dump notepad with 1-second debouncing.
+<p align="center">
+  <a href="https://vite.dev/"><img src="https://img.shields.io/badge/Vite-6495ED?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" /></a>
+  <a href="https://react.dev/"><img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" /></a>
+  <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" /></a>
+  <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" /></a>
+  <a href="https://supabase.com/"><img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase" /></a>
+</p>
 
 ---
 
-## Step-by-Step Setup Guide
+## ✨ Overview
+
+**Zero to Modern AI** is a real, multi-user, deployable learning platform converted from the gamified Command Deck HTML tracker. It is designed to provide a highly interactive and engaging learning experience, bridging premium visual aesthetics with robust full-stack state management. 
+
+Drawing inspiration from platforms like **DataCamp** and **Duolingo**, the platform features a dynamic path engine, progress checkpoints, and an isolated per-user experience powered by **Supabase**.
+
+---
+
+## 🚀 Key Features
+
+### 🎮 Gamified Learning Experience
+- **DataCamp × Duolingo UI:** Premium light/dark theme aesthetics with responsive navigation sidebars and interactive 3D buttons.
+- **Dynamic Path Engine:** Interactive rendering of winding paths, JIT evaluation checkpoints, optional sidequests (Naive Bayes, PCA, k-means), project bosses, and gates.
+- **Achievements & Stats:** Track XP, levels, learning streaks, and streak freezes to keep motivation high.
+
+### 🛡️ Cloud Sync & Data Management
+- **Supabase Cloud Sync:** Robust email/password authentication and Google OAuth sign-in. All user stats and progress checkpoints are securely isolated per user via Row-Level Security (RLS).
+- **Seamless Offline Data Migration:** On first login, the platform detects legacy offline progress data (`zeroToModernAI_v2`) and offers a one-click cloud import helper to ensure zero data loss.
+
+### 🛠️ Interactive Workspace
+- **Workspace Utilities:** Integrated Pomodoro clock and auto-saving Brain Dump notepad with 1-second debouncing to keep you focused.
+- **Audio Synthesizer:** Custom synthesized audio effects using browser AudioContext oscillators for interactive feedback.
+
+---
+
+## 🛠️ Technology Stack
+
+- **Framework & Bundler:** Vite + React 18 (SPA)
+- **Language:** TypeScript
+- **Styling & Theme:** Tailwind CSS for a premium gamified aesthetic, supporting light and dark modes.
+- **Backend Integrations:** Supabase (Auth, PostgreSQL Database, Row-Level Security).
+- **Audio Effects:** Native Web Audio API (`AudioContext`).
+
+---
+
+## 📁 Project Structure
+
+```text
+Zero to Modern AI/
+├── public/                 # Static assets and icons
+├── src/
+│   ├── components/         # Reusable UI widgets and interactive components
+│   ├── context/            # React Context (AuthContext for user login and cloud progress)
+│   ├── data/               # Static dataset and core Phase 0-3 detailed curriculum structures (`roadmapData.ts`)
+│   ├── hooks/              # Custom hooks (e.g., `useAudio.ts` for synthesizer oscillators)
+│   ├── pages/              # Main application views
+│   ├── App.tsx             # App Shell, routing, and modal coordinator
+│   ├── supabase.ts         # Supabase JS client initializer
+│   └── main.tsx            # Main DOM entrypoint
+├── supabase_schema.sql     # Database layouts, RLS policies, indices, and triggers
+├── package.json            # Project dependencies
+└── vite.config.ts          # Vite build pipeline
+```
+
+---
+
+## ⚙️ Getting Started
+
+Follow these instructions to run the platform locally on your system.
 
 ### 1. Supabase Backend Configuration
 
-1. Go to the [Supabase Dashboard](https://supabase.com) and create a new project.
-2. Once the project is provisioned, navigate to the **SQL Editor** tab from the left sidebar.
-3. Click **New query**, paste the entire contents of `supabase_schema.sql` (found in this repository), and click **Run**.
-   - This creates all necessary tables (`profiles`, `stats`, `progress`, `activity`, `consumed_freezes`, `achievements`, `brain_dump`).
-   - It enables Row-Level Security (RLS) on each table and creates access policies tied to `auth.uid()`.
-   - It installs a Postgres trigger to automatically provision user profiles, stats, and dumps on sign-up.
+1. Create a new project on the [Supabase Dashboard](https://supabase.com).
+2. Go to the **SQL Editor**, click **New query**, paste the entire contents of `supabase_schema.sql`, and click **Run**.
+   - *This creates tables (`profiles`, `stats`, `progress`, etc.), enables RLS, and sets up auth triggers.*
+3. Configure your **Authentication Providers**:
+   - Enable **Email** provider.
+   - For **Google OAuth**, create credentials in the Google Cloud Console and add the Client ID/Secret to Supabase > Authentication > Providers > Google.
 
-### 2. Configure Authentication Providers
+### 2. Local Development Setup
 
-#### A. Email / Password (Default)
-1. Go to **Authentication** > **Providers** > **Email**.
-2. Ensure it is enabled.
-3. We recommend disabling **Confirm email** for testing environments to allow immediate log-in on signup, or configure your SMTP redirect URL.
+1. **Clone the Repository:**
+   ```bash
+   git clone <your-repo-url>
+   cd <your-repo-directory>
+   ```
 
-#### B. Google OAuth
-1. Go to your [Google Cloud Console](https://console.cloud.google.com).
-2. Create a new project, navigate to **APIs & Services** > **Credentials**, and configure an **OAuth consent screen**.
-3. Create an **OAuth 2.0 Client ID** as a *Web application*.
-4. Under **Authorized redirect URIs**, add your Supabase redirect URI. You can find this in Supabase under **Authentication** > **Providers** > **Google** (format: `https://<your-project-ref>.supabase.co/auth/v1/callback`).
-5. Copy the **Client ID** and **Client Secret**.
-6. Go back to Supabase, navigate to **Authentication** > **Providers** > **Google**, enable it, paste the Client ID and Client Secret, and click **Save**.
-
----
-
-## 3. Local Development Setup
-
-1. Clone or copy this repository to your local system.
-2. In the root directory, create a `.env` file from the provided `.env.example`:
+2. **Configure Environment Variables:**
+   Create a `.env` file from the provided `.env.example`:
    ```bash
    cp .env.example .env
    ```
-3. Set your Supabase API variables inside `.env`:
-   - `VITE_SUPABASE_URL`: Your Supabase Project URL (e.g. `https://xxx.supabase.co`).
-   - `VITE_SUPABASE_ANON_KEY`: Your Supabase Project public anon key.
-4. Install package dependencies and launch the dev server:
+   Add your Supabase API variables inside `.env`:
+   ```env
+   VITE_SUPABASE_URL=your_supabase_project_url
+   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+
+3. **Install Dependencies & Run:**
    ```bash
    npm install
    npm run dev
    ```
-5. Open `http://localhost:5173` in your browser.
+   Open `http://localhost:5173` to view the application in your browser!
 
 ---
 
-## 4. Deployment on Vercel
+## ☁️ Deployment on Vercel
 
-1. Push your repository to your GitHub account.
-2. Import the project in the [Vercel Dashboard](https://vercel.com).
-3. Under the **Environment Variables** accordion, add your Supabase credentials:
-   - Name: `VITE_SUPABASE_URL` | Value: *Your Supabase Project URL*
-   - Name: `VITE_SUPABASE_ANON_KEY` | Value: *Your Supabase Public Anon Key*
-4. Ensure the build configuration is:
-   - Framework Preset: **Vite**
-   - Build Command: `npm run build`
-   - Output Directory: `dist`
-5. Click **Deploy**. Vercel will build your assets and publish the live platform!
-
----
-
-## File Structure
-
-- `supabase_schema.sql` - Database table layouts, RLS policies, indices, and triggers.
-- `src/App.tsx` - App Shell, router, and modal coordinator.
-- `src/supabase.ts` - Supabase JS client initializer.
-- `src/context/AuthContext.tsx` - User login context, cloud progress tracker, and legacy data migration helper.
-- `src/hooks/useAudio.ts` - Audio synthesizer oscillators.
-- `src/data/roadmapData.ts` - Core Phase 0-3 detailed curriculum structures.
+1. Push your repository to GitHub and import the project into the [Vercel Dashboard](https://vercel.com).
+2. Under **Environment Variables**, add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`.
+3. Set the Framework Preset to **Vite** and the Build Command to `npm run build`.
+4. Click **Deploy**. Vercel will build and publish your platform!
