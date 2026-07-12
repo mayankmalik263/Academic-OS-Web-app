@@ -164,44 +164,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let isInitialized = false;
 
-    // Check active sessions on initial mount
-    supabase.auth.getSession().then(({ data: { session: activeSession } }) => {
-      setSession(activeSession);
-      setUser(activeSession?.user ?? null);
-      if (activeSession?.user) {
-        refreshUserData().then(() => {
-          isInitialized = true;
-          setLoading(false);
-        }).catch((err) => {
-          console.error("Error in refreshUserData on mount:", err);
-          isInitialized = true;
-          setLoading(false);
-        });
-      } else {
-        isInitialized = true;
-        setLoading(false);
-      }
-    }).catch((err) => {
-      console.error("Error in getSession on mount:", err);
-      isInitialized = true;
-      setLoading(false);
-    });
-
-    // Listen for auth state changes (runs silently in the background after initial mount)
+    // Listen for auth state changes. Supabase v2 automatically fires an INITIAL_SESSION event.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, newSession) => {
         setSession(newSession);
         setUser(newSession?.user ?? null);
         
         if (newSession?.user) {
-          // If already initialized, refresh data silently in the background
           if (!isInitialized) {
             setLoading(true);
           }
           try {
             await refreshUserData();
           } catch (err) {
-            console.error("Error in silent auth refresh:", err);
+            console.error("Error in auth refresh:", err);
           } finally {
             if (!isInitialized) {
               isInitialized = true;
