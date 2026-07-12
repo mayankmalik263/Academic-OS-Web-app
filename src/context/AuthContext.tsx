@@ -56,14 +56,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLastSyncedAt(null);
   };
 
-  const refreshUserData = async () => {
-    if (!supabase.auth.getUser()) return;
-    const { data: { user: currentUser } } = await supabase.auth.getUser();
-    if (!currentUser) {
-      clearState();
-      return;
-    }
-
+  const refreshUserData = async (currentUser: User) => {
     try {
       // Fetch all tables in parallel to optimize load times
       const [
@@ -75,13 +68,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         freezeRes,
         achievementsRes
       ] = await Promise.all([
-        supabase.from('profiles').select('*').single(),
-        supabase.from('stats').select('*').single(),
-        supabase.from('brain_dump').select('*').single(),
-        supabase.from('progress').select('check_id, state'),
-        supabase.from('activity').select('activity_date'),
-        supabase.from('consumed_freezes').select('freeze_date'),
-        supabase.from('achievements').select('achievement_id')
+        supabase.from('profiles').select('*').eq('id', currentUser.id).single(),
+        supabase.from('stats').select('*').eq('user_id', currentUser.id).single(),
+        supabase.from('brain_dump').select('*').eq('user_id', currentUser.id).single(),
+        supabase.from('progress').select('check_id, state').eq('user_id', currentUser.id),
+        supabase.from('activity').select('activity_date').eq('user_id', currentUser.id),
+        supabase.from('consumed_freezes').select('freeze_date').eq('user_id', currentUser.id),
+        supabase.from('achievements').select('achievement_id').eq('user_id', currentUser.id)
       ]);
 
       // 1. Process Profile
@@ -162,37 +155,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    let isInitialized = false;
+    let isMounted = true;
 
-    // Listen for auth state changes. Supabase v2 automatically fires an INITIAL_SESSION event.
+    const initializeAuth = async () => {
+      try {
+        const { data: { session: activeSession } } = await supabase.auth.getSession();
+        if (!isMounted) return;
+        
+        setSession(activeSession);
+        setUser(activeSession?.user ?? null);
+
+        if (activeSession?.user) {
+          await refreshUserData(activeSession.user);
+        }
+      } catch (err) {
+        console.error("Error getting initial session:", err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    // Listen for auth state changes.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, newSession) => {
+        if (!isMounted) return;
+        
+        // Skip INITIAL_SESSION since initializeAuth handles it
+        if (_event === 'INITIAL_SESSION') return;
+
         setSession(newSession);
         setUser(newSession?.user ?? null);
         
         if (newSession?.user) {
-          if (!isInitialized) {
-            setLoading(true);
-          }
           try {
-            await refreshUserData();
+            await refreshUserData(newSession.user);
           } catch (err) {
             console.error("Error in auth refresh:", err);
-          } finally {
-            if (!isInitialized) {
-              isInitialized = true;
-              setLoading(false);
-            }
           }
         } else {
           clearState();
-          isInitialized = true;
           setLoading(false);
         }
       }
     );
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
