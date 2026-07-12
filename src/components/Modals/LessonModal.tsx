@@ -24,7 +24,7 @@ export const LessonModal: React.FC<LessonModalProps> = ({
 
   if (!isOpen) return null;
 
-  const checkId = `t_${topic.id}`;
+  const checkId = topic.id.startsWith('pyslice_') ? topic.id : `t_${topic.id}`;
   const isCompleted = !!progress[checkId];
 
   const handleToggleComplete = async () => {

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useAudio } from '../../hooks/useAudio';
 import { roadmap } from '../../data/roadmapData';
+import { pythonSubsteps } from '../../data/pythonSliceData';
 
 interface SidebarProps {
   activeTab: string;
@@ -55,6 +56,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
         totalItems++;
         if (progress[`t_${t.id}`]) completedItems++;
       });
+    });
+
+    // Python items
+    const pyList = pythonSubsteps[p.id] || [];
+    pyList.forEach(t => {
+      totalItems++;
+      if (progress[t.id]) completedItems++;
     });
 
     // Projects

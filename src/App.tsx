@@ -213,7 +213,8 @@ const AppContent: React.FC = () => {
             if (dates.has(currStr) || consumed.has(currStr)) {
               currentStreak++;
             } else {
-              if (tempFreezes > 0) {
+              const hasOlderActivity = Array.from(dates).some(d => d < currStr);
+              if (hasOlderActivity && tempFreezes > 0) {
                 tempFreezes--;
                 consumed.add(currStr);
                 await consumeFreeze(currStr);
