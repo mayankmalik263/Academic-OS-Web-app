@@ -16,7 +16,7 @@ interface AuthContextProps {
   brainDump: string;
   lastSyncedAt: Date | null;
   signOut: () => Promise<void>;
-  refreshUserData: () => Promise<void>;
+  refreshUserData: (targetUser?: User | null) => Promise<void>;
   toggleProgress: (checkId: string, value: boolean) => Promise<void>;
   addActivityDate: (dateStr: string) => Promise<void>;
   updateStats: (updates: Partial<Stats>) => Promise<void>;
@@ -56,7 +56,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLastSyncedAt(null);
   };
 
-  const refreshUserData = async (currentUser: User) => {
+  const refreshUserData = async (targetUser?: User | null) => {
+    const currentUser = targetUser || user;
+    if (!currentUser) return;
+
     try {
       // Fetch all tables in parallel to optimize load times
       const [
