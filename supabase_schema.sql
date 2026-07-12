@@ -35,10 +35,11 @@ CREATE TABLE IF NOT EXISTS public.progress (
     PRIMARY KEY (user_id, check_id)
 );
 
--- Activity Table (Tracks daily active study dates)
+-- Activity Table (Tracks daily active study dates and notes)
 CREATE TABLE IF NOT EXISTS public.activity (
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     activity_date DATE NOT NULL,
+    notes TEXT DEFAULT '',
     PRIMARY KEY (user_id, activity_date)
 );
 

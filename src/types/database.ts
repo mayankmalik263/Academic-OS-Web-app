@@ -26,6 +26,7 @@ export interface ProgressItem {
 export interface ActivityItem {
   user_id: string;
   activity_date: string;
+  notes?: string;
 }
 
 export interface ConsumedFreezeItem {
@@ -48,7 +49,9 @@ export interface UserDashboardData {
   profile: Profile | null;
   stats: Stats | null;
   progress: Record<string, boolean>;
+  progressDates: Record<string, string>;
   activityDates: string[];
+  activityNotes: Record<string, string>;
   consumedFreezeDates: string[];
   achievements: string[];
   brainDump: string;

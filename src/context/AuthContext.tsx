@@ -10,7 +10,9 @@ interface AuthContextProps {
   profile: Profile | null;
   stats: Stats | null;
   progress: Record<string, boolean>;
+  progressDates: Record<string, string>;
   activityDates: string[];
+  activityNotes: Record<string, string>;
   consumedFreezeDates: string[];
   achievements: string[];
   brainDump: string;
@@ -21,6 +23,7 @@ interface AuthContextProps {
   addActivityDate: (dateStr: string) => Promise<void>;
   updateStats: (updates: Partial<Stats>) => Promise<void>;
   updateBrainDump: (content: string) => Promise<void>;
+  updateDailyNote: (dateStr: string, notes: string) => Promise<void>;
   unlockAchievement: (achievementId: string) => Promise<void>;
   consumeFreeze: (dateStr: string) => Promise<void>;
   importLegacyData: (legacyData: any) => Promise<boolean>;
@@ -37,7 +40,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [progress, setProgress] = useState<Record<string, boolean>>({});
+  const [progressDates, setProgressDates] = useState<Record<string, string>>({});
   const [activityDates, setActivityDates] = useState<string[]>([]);
+  const [activityNotes, setActivityNotes] = useState<Record<string, string>>({});
   const [consumedFreezeDates, setConsumedFreezeDates] = useState<string[]>([]);
   const [achievements, setAchievements] = useState<string[]>([]);
   const [brainDump, setBrainDump] = useState<string>('');
@@ -49,7 +54,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setProfile(null);
     setStats(null);
     setProgress({});
+    setProgressDates({});
     setActivityDates([]);
+    setActivityNotes({});
     setConsumedFreezeDates([]);
     setAchievements([]);
     setBrainDump('');
@@ -74,8 +81,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         supabase.from('profiles').select('*').eq('id', currentUser.id).single(),
         supabase.from('stats').select('*').eq('user_id', currentUser.id).single(),
         supabase.from('brain_dump').select('*').eq('user_id', currentUser.id).single(),
-        supabase.from('progress').select('check_id, state').eq('user_id', currentUser.id),
-        supabase.from('activity').select('activity_date').eq('user_id', currentUser.id),
+        supabase.from('progress').select('check_id, state, updated_at').eq('user_id', currentUser.id),
+        supabase.from('activity').select('activity_date, notes').eq('user_id', currentUser.id),
         supabase.from('consumed_freezes').select('freeze_date').eq('user_id', currentUser.id),
         supabase.from('achievements').select('achievement_id').eq('user_id', currentUser.id)
       ]);
@@ -131,15 +138,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // 4. Process Progress Checkmarks
       if (progressRes.data) {
         const progMap: Record<string, boolean> = {};
+        const progDatesMap: Record<string, string> = {};
         progressRes.data.forEach((item: any) => {
           progMap[item.check_id] = item.state;
+          if (item.updated_at) progDatesMap[item.check_id] = item.updated_at;
         });
         setProgress(progMap);
+        setProgressDates(progDatesMap);
       }
 
       // 5. Process Activity Dates
       if (activityRes.data) {
+        const datesMap: Record<string, string> = {};
+        activityRes.data.forEach((item: any) => {
+          datesMap[item.activity_date] = item.notes || '';
+        });
         setActivityDates(activityRes.data.map((item: any) => item.activity_date));
+        setActivityNotes(datesMap);
       }
 
       // 6. Process Consumed Freezes
@@ -228,6 +243,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // Update local state immediately for snappy UX
         setProgress(prev => ({ ...prev, [checkId]: true }));
+        setProgressDates(prev => ({ ...prev, [checkId]: new Date().toISOString() }));
       } else {
         ({ error } = await supabase
           .from('progress')
@@ -235,6 +251,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .match({ user_id: user.id, check_id: checkId }));
 
         setProgress(prev => {
+          const next = { ...prev };
+          delete next[checkId];
+          return next;
+        });
+        setProgressDates(prev => {
           const next = { ...prev };
           delete next[checkId];
           return next;
@@ -255,9 +276,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .upsert({ user_id: user.id, activity_date: dateStr });
 
       setActivityDates(prev => [...prev, dateStr]);
+      if (!activityNotes[dateStr]) setActivityNotes(prev => ({ ...prev, [dateStr]: '' }));
       if (!error) setLastSyncedAt(new Date());
     } catch (e) {
       console.error('Error logging activity date:', e);
+    }
+  };
+
+  const updateDailyNote = async (dateStr: string, notes: string) => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('activity')
+        .upsert({ user_id: user.id, activity_date: dateStr, notes });
+
+      setActivityNotes(prev => ({ ...prev, [dateStr]: notes }));
+      if (!activityDates.includes(dateStr)) {
+        setActivityDates(prev => [...prev, dateStr]);
+      }
+      if (!error) setLastSyncedAt(new Date());
+    } catch (e) {
+      console.error('Error saving daily note:', e);
     }
   };
 
@@ -438,7 +478,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         profile,
         stats,
         progress,
+        progressDates,
         activityDates,
+        activityNotes,
         consumedFreezeDates,
         achievements,
         brainDump,
@@ -449,6 +491,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         addActivityDate,
         updateStats,
         updateBrainDump,
+        updateDailyNote,
         unlockAchievement,
         consumeFreeze,
         importLegacyData

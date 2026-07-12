@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useAudio } from '../../hooks/useAudio';
 import { ACHIEVEMENTS_DEF, SVG_ICONS } from '../Common/Assets';
+import { DailyActivityModal } from '../Modals/DailyActivityModal';
 
 export const StatsDashboard: React.FC = () => {
   const { stats, activityDates, consumedFreezeDates, achievements } = useAuth();
@@ -9,6 +10,9 @@ export const StatsDashboard: React.FC = () => {
 
   const [calMonth, setCalMonth] = useState(() => new Date().getMonth());
   const [calYear, setCalYear] = useState(() => new Date().getFullYear());
+
+  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const monthNames = [
     "January", "February", "March", "April", "May", "June",
@@ -59,7 +63,7 @@ export const StatsDashboard: React.FC = () => {
       const cellDate = new Date(calYear, calMonth, day);
       const cellDateStr = getLocalDateString(cellDate);
 
-      let classes = "calendar-cell";
+      let classes = "calendar-cell cursor-pointer hover:scale-110 transition-transform duration-200";
       if (activeSet.has(cellDateStr)) {
         classes += " active-day";
       } else if (frozenSet.has(cellDateStr)) {
@@ -71,7 +75,15 @@ export const StatsDashboard: React.FC = () => {
       }
 
       cells.push(
-        <div key={`day-${day}`} className={classes}>
+        <div 
+          key={`day-${day}`} 
+          className={classes}
+          onClick={() => {
+            playSound('click');
+            setSelectedDate(cellDateStr);
+            setIsModalOpen(true);
+          }}
+        >
           {day}
         </div>
       );
@@ -168,6 +180,12 @@ export const StatsDashboard: React.FC = () => {
           })}
         </div>
       </div>
+
+      <DailyActivityModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        dateStr={selectedDate}
+      />
     </div>
   );
 };
